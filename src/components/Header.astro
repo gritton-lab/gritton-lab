@@ -1,0 +1,103 @@
+---
+import settings from '../data/settings.json';
+
+const { pathname } = Astro.url;
+
+const nav = [
+  { label: 'Home', href: '/' },
+  { label: 'Research Projects', href: '/research-projects' },
+  { label: 'Lab Team', href: '/lab-team' },
+  { label: 'Publications', href: '/publications' },
+  { label: 'Lab Positions', href: '/lab-positions' },
+  { label: 'News', href: '/news' },
+  { label: 'Contact', href: '/contact' },
+];
+
+const isActive = (href: string) =>
+  href === '/' ? pathname === '/' : pathname.startsWith(href);
+---
+
+<header class="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur">
+  <div class="container-page flex h-20 items-center justify-between gap-6">
+    <a href="/" class="flex items-center gap-3 shrink-0" aria-label="Gritton Lab — home">
+      <img
+        src="/images/uploads/gritton-logo.png"
+        alt=""
+        width="169"
+        height="37"
+        class="h-9 w-auto"
+      />
+      <span class="sr-only">{settings.siteTitle}</span>
+    </a>
+
+    <!-- Desktop navigation -->
+    <nav class="hidden lg:block" aria-label="Main">
+      <ul class="flex items-center gap-1">
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                class:list={[
+                  'relative rounded px-3 py-2 text-[0.9rem] font-medium transition-colors',
+                  isActive(item.href)
+                    ? 'text-illini-blue'
+                    : 'text-ink-muted hover:text-illini-blue',
+                ]}
+              >
+                {item.label}
+                {isActive(item.href) && (
+                  <span
+                    aria-hidden="true"
+                    class="absolute inset-x-3 -bottom-px h-0.5 rounded bg-illini-orange"
+                  />
+                )}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <!-- Mobile menu toggle: a checkbox so the nav works without JavaScript -->
+    <input type="checkbox" id="nav-toggle" class="peer sr-only lg:hidden" />
+    <label
+      for="nav-toggle"
+      class="cursor-pointer rounded p-2 text-illini-blue lg:hidden"
+      aria-label="Toggle navigation menu"
+    >
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="3" y1="7" x2="21" y2="7"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="17" x2="21" y2="17"></line>
+      </svg>
+    </label>
+
+    <nav
+      class="absolute inset-x-0 top-20 hidden border-b border-line bg-surface shadow-sm peer-checked:block lg:!hidden"
+      aria-label="Main"
+    >
+      <ul class="container-page flex flex-col py-3">
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+                class:list={[
+                  'block border-l-2 py-2.5 pl-3 text-[0.95rem] font-medium transition-colors',
+                  isActive(item.href)
+                    ? 'border-illini-orange text-illini-blue'
+                    : 'border-transparent text-ink-muted hover:text-illini-blue',
+                ]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>

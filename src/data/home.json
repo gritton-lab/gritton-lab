@@ -1,0 +1,26 @@
+{
+  "heroHeading": "Motivated to reveal the contributions of attention in sensory processing, learning and memory, and neuropsychiatric illness and disease.",
+  "intro": "Each decision that we make depends on the coordinated actions of thousands of nerve cells from diverse brain regions working in unison at brief moments in time. However, it remains a mystery as to how individual cells coordinate their activity during perception or mobilize activity to drive behavior. Our research actively seeks to understand how neuromodulators such as acetylcholine, dopamine, and norepinephrine, contribute to this coordination and how disruption in these neurotransmitter systems contribute to neuropsychiatric illness and disease.",
+  "researchInterestsHeading": "Research Interests",
+  "researchInterests": [
+    "Neuromodulation of Learning and Memory",
+    "Experience-dependent Synaptic Plasticity",
+    "Circuit Mechanisms of Neuropsychiatric Disorders",
+    "Oscillatory Activity in Cognitive Function",
+    "Excitatory/Inhibitory Balance in Circuit Function"
+  ],
+  "ctas": [
+    {
+      "heading": "Learn more about our research",
+      "body": "Five active projects spanning oscillations, auditory attention, autism models, circuit homeostasis, and environmental risk.",
+      "label": "Explore our research",
+      "url": "/research-projects"
+    },
+    {
+      "heading": "Join the lab",
+      "body": "We are recruiting postdocs, graduate students, research technicians, and undergraduates.",
+      "label": "See open positions",
+      "url": "/lab-positions"
+    }
+  ]
+}

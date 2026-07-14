@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+/**
+ * Design tokens. Illini Orange and Blue are used as accents on a neutral,
+ * journal-like base — the university cue should read as affiliation, not
+ * as a theme.
+ */
+@theme {
+  --color-illini-orange: #ff5f05;
+  --color-illini-orange-dark: #d94e00;
+  --color-illini-blue: #13294b;
+  --color-illini-blue-light: #1d3a68;
+
+  --color-ink: #16181d;
+  --color-ink-muted: #545a66;
+  --color-line: #e3e6ea;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f6f7f9;
+
+  --font-sans: "Inter var", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-illini-blue);
+    font-weight: 600;
+    letter-spacing: -0.018em;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  /* Visible focus for keyboard users, on every interactive element. */
+  :where(a, button, input, textarea, select, summary):focus-visible {
+    outline: 2px solid var(--color-illini-orange);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-illini-orange) 22%, white);
+  }
+}
+
+@layer components {
+  /* Page width: one measure for every page, so headers, text, and cards align. */
+  .container-page {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  /* Body copy inside markdown-rendered content. */
+  .prose-lab {
+    color: var(--color-ink);
+    max-width: 68ch;
+  }
+  .prose-lab p {
+    margin-block: 1.1em;
+  }
+  .prose-lab a {
+    color: var(--color-illini-blue);
+    text-decoration: underline;
+    text-decoration-color: var(--color-illini-orange);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 2px;
+  }
+  .prose-lab a:hover {
+    color: var(--color-illini-orange-dark);
+  }
+  .prose-lab h2 {
+    font-size: 1.4rem;
+    margin-block: 1.8em 0.6em;
+  }
+  .prose-lab h3 {
+    font-size: 1.15rem;
+    margin-block: 1.6em 0.5em;
+  }
+  .prose-lab ul {
+    list-style: disc;
+    padding-left: 1.3em;
+    margin-block: 1.1em;
+  }
+  .prose-lab li {
+    margin-block: 0.35em;
+  }
+  .prose-lab img {
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-line);
+    margin-block: 1.75em;
+  }
+  .prose-lab strong {
+    font-weight: 600;
+    color: var(--color-illini-blue);
+  }
+
+  /* The thin orange rule that marks a section heading. */
+  .rule-accent::after {
+    content: "";
+    display: block;
+    width: 3rem;
+    height: 3px;
+    margin-top: 0.85rem;
+    background-color: var(--color-illini-orange);
+    border-radius: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

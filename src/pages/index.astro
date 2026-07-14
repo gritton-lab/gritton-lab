@@ -1,0 +1,154 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import NewsCard from '../components/NewsCard.astro';
+import home from '../data/home.json';
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const latestNews = (await getCollection('news', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+---
+
+<Base description={home.intro.slice(0, 155)}>
+  <!-- Hero -->
+  <section class="border-b border-line bg-surface-sunken">
+    <div class="container-page py-20 sm:py-28">
+      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-illini-orange-dark">
+        Gritton Lab · University of Illinois Urbana-Champaign
+      </p>
+      <h1 class="mt-5 max-w-4xl text-3xl leading-tight sm:text-[2.6rem]">
+        {home.heroHeading}
+      </h1>
+      <p class="mt-8 max-w-2xl text-lg leading-relaxed text-ink-muted">
+        {home.intro}
+      </p>
+      <div class="mt-10 flex flex-wrap gap-3">
+        <a
+          href="/research-projects"
+          class="rounded-md bg-illini-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-illini-blue-light"
+        >
+          Explore our research
+        </a>
+        <a
+          href="/lab-positions"
+          class="rounded-md border border-line bg-surface px-6 py-3 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
+        >
+          Join the lab
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Research interests -->
+  <section class="container-page py-20">
+    <h2 class="rule-accent text-2xl">{home.researchInterestsHeading}</h2>
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        home.researchInterests.map((interest, i) => (
+          <li class="flex items-start gap-4 rounded-lg border border-line bg-surface p-6 transition-colors hover:border-illini-orange">
+            <span
+              aria-hidden="true"
+              class="mt-0.5 text-sm font-semibold tabular-nums text-illini-orange"
+            >
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span class="font-medium text-illini-blue">{interest}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- Research projects preview -->
+  <section class="border-y border-line bg-surface-sunken">
+    <div class="container-page py-20">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <h2 class="rule-accent text-2xl">Research Projects</h2>
+        <a
+          href="/research-projects"
+          class="text-sm font-semibold text-illini-blue underline decoration-illini-orange decoration-2 underline-offset-4 hover:text-illini-orange-dark"
+        >
+          All projects
+        </a>
+      </div>
+
+      <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {
+          projects.slice(0, 3).map((project) => (
+            <a
+              href={`/research-projects#${project.id}`}
+              class="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-shadow hover:shadow-md"
+            >
+              {project.data.image && (
+                <div class="aspect-[16/10] overflow-hidden bg-surface-sunken">
+                  <img
+                    src={project.data.image}
+                    alt={project.data.imageAlt}
+                    loading="lazy"
+                    class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  />
+                </div>
+              )}
+              <div class="flex flex-1 flex-col p-6">
+                <h3 class="text-base group-hover:text-illini-orange-dark">
+                  {project.data.title}
+                </h3>
+                {project.data.summary && (
+                  <p class="mt-3 text-sm leading-relaxed text-ink-muted">
+                    {project.data.summary}
+                  </p>
+                )}
+              </div>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest news -->
+  {
+    latestNews.length > 0 && (
+      <section class="container-page py-20">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <h2 class="rule-accent text-2xl">Latest News</h2>
+          <a
+            href="/news"
+            class="text-sm font-semibold text-illini-blue underline decoration-illini-orange decoration-2 underline-offset-4 hover:text-illini-orange-dark"
+          >
+            All news
+          </a>
+        </div>
+        <div class="mt-10 grid gap-6 md:grid-cols-3">
+          {latestNews.map((post) => (
+            <NewsCard post={post} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Calls to action -->
+  <section class="border-t border-line bg-surface-sunken">
+    <div class="container-page grid gap-6 py-20 md:grid-cols-2">
+      {
+        home.ctas.map((cta) => (
+          <div class="rounded-lg border border-line bg-surface p-8">
+            <h2 class="text-xl">{cta.heading}</h2>
+            <p class="mt-3 text-sm leading-relaxed text-ink-muted">{cta.body}</p>
+            <a
+              href={cta.url}
+              class="mt-6 inline-block rounded-md bg-illini-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-illini-blue-light"
+            >
+              {cta.label}
+            </a>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</Base>

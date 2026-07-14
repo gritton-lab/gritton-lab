@@ -1,0 +1,27 @@
+---
+import settings from '../data/settings.json';
+
+// Site-wide notice, toggled from the CMS. This is the "popup" mechanism:
+// deliberately a dismissible bar rather than a modal, so a mistaken edit can
+// never block the site.
+const a = settings.announcement;
+const show = a.enabled && a.text.trim().length > 0;
+---
+
+{
+  show && (
+    <div class="bg-illini-blue text-white">
+      <div class="container-page flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2.5 text-center text-sm">
+        <p>{a.text}</p>
+        {a.linkUrl && a.linkLabel && (
+          <a
+            href={a.linkUrl}
+            class="font-semibold text-white underline decoration-illini-orange decoration-2 underline-offset-4 hover:text-illini-orange"
+          >
+            {a.linkLabel}
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}

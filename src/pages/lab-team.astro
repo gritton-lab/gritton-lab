@@ -1,0 +1,97 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import PersonCard from '../components/PersonCard.astro';
+
+const team = await getCollection('team');
+
+const withContent = await Promise.all(
+  team.map(async (person) => {
+    const { Content } = await render(person);
+    // Only pass a body through when the file actually has one.
+    const hasBody = person.body?.trim().length > 0;
+    return { person, Content: hasBody ? Content : undefined };
+  }),
+);
+
+const byOrder = (a: { person: any }, b: { person: any }) =>
+  a.person.data.order - b.person.data.order;
+
+const pi = withContent.filter((p) => p.person.data.group === 'pi').sort(byOrder);
+
+// Everyone currently in the lab, in one section — grouping students by degree
+// track adds nothing at this size.
+const members = withContent
+  .filter((p) => ['grad', 'undergrad', 'staff'].includes(p.person.data.group))
+  .sort(byOrder);
+
+const alumni = withContent
+  .filter((p) => p.person.data.group === 'alumni')
+  .sort(byOrder);
+---
+
+<Base
+  title="Lab Team"
+  description="The people of the Gritton Lab at the University of Illinois Urbana-Champaign."
+>
+  <PageHeader
+    title="Lab Team"
+    intro="We are a group of neuroscientists, bioengineers, and computational researchers studying how neuromodulators shape attention, learning, and memory."
+  />
+
+  <div class="container-page py-16">
+    {
+      pi.length > 0 && (
+        <section>
+          <h2 class="rule-accent text-xl">Principal Investigator</h2>
+          <div class="mt-10">
+            {pi.map(({ person, Content }) => (
+              <PersonCard person={person} Content={Content} featured />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      members.length > 0 && (
+        <section class="mt-20">
+          <h2 class="rule-accent text-xl">Team Members</h2>
+          <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {members.map(({ person, Content }) => (
+              <PersonCard person={person} Content={Content} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      alumni.length > 0 && (
+        <section class="mt-20">
+          <h2 class="rule-accent text-xl">Lab Alumni</h2>
+          <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {alumni.map(({ person, Content }) => (
+              <PersonCard person={person} Content={Content} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <section class="mt-20 rounded-lg border border-line bg-surface-sunken p-10 text-center">
+      <h2 class="text-2xl">Join our lab</h2>
+      <p class="mx-auto mt-3 max-w-xl text-ink-muted">
+        We are recruiting postdocs, graduate students, research technicians, and
+        undergraduates.
+      </p>
+      <a
+        href="/lab-positions"
+        class="mt-6 inline-block rounded-md bg-illini-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-illini-blue-light"
+      >
+        See open positions
+      </a>
+    </section>
+  </div>
+</Base>

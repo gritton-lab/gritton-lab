@@ -1,0 +1,121 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import settings from '../data/settings.json';
+
+const pubs = (await getCollection('publications')).sort((a, b) => {
+  if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+  return a.data.order - b.data.order;
+});
+
+// Group into years, newest first.
+const years = [...new Set(pubs.map((p) => p.data.year))].sort((a, b) => b - a);
+const byYear = years.map((year) => ({
+  year,
+  items: pubs.filter((p) => p.data.year === year),
+}));
+
+// Author names to highlight in each citation.
+const LAB_AUTHORS = /\b(Gritton\s+HJ?|Qu\s+Z)\b/g;
+
+/** Split a citation's author string so lab members can be bolded. */
+function highlightAuthors(authors: string) {
+  const parts: { text: string; lab: boolean }[] = [];
+  let last = 0;
+  for (const m of authors.matchAll(LAB_AUTHORS)) {
+    if (m.index! > last) {
+      parts.push({ text: authors.slice(last, m.index), lab: false });
+    }
+    parts.push({ text: m[0], lab: true });
+    last = m.index! + m[0].length;
+  }
+  if (last < authors.length) parts.push({ text: authors.slice(last), lab: false });
+  return parts;
+}
+---
+
+<Base
+  title="Publications"
+  description="Peer-reviewed publications from the Gritton Lab."
+>
+  <PageHeader
+    title="Publications"
+    intro="Selected peer-reviewed work from the lab. Every entry links to the published article."
+  />
+
+  <div class="container-page py-16">
+    <div class="flex flex-wrap gap-3">
+      <a
+        href={settings.social.pubmed}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-md border border-line bg-surface px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
+      >
+        Full list on PubMed
+      </a>
+      <a
+        href={settings.social.googleScholar}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-md border border-line bg-surface px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
+      >
+        Google Scholar profile
+      </a>
+    </div>
+
+    <div class="mt-14 space-y-14">
+      {
+        byYear.map(({ year, items }) => (
+          <section>
+            <div class="flex items-center gap-4">
+              <h2 class="text-xl tabular-nums">{year}</h2>
+              <span aria-hidden="true" class="h-px flex-1 bg-line" />
+              <span class="text-xs font-medium uppercase tracking-wide text-ink-muted">
+                {items.length} {items.length === 1 ? 'paper' : 'papers'}
+              </span>
+            </div>
+
+            <ol class="mt-6 space-y-6">
+              {items.map((pub) => (
+                <li class="border-l-2 border-line pl-5 transition-colors hover:border-illini-orange">
+                  <p class="text-sm leading-relaxed text-ink-muted">
+                    {highlightAuthors(pub.data.authors).map((part) =>
+                      part.lab ? (
+                        <strong class="font-semibold text-ink">{part.text}</strong>
+                      ) : (
+                        part.text
+                      ),
+                    )}
+                  </p>
+
+                  <h3 class="mt-1.5 text-base font-medium leading-snug">
+                    {pub.data.url ? (
+                      <a
+                        href={pub.data.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="underline decoration-illini-orange decoration-2 underline-offset-4 hover:text-illini-orange-dark"
+                      >
+                        {pub.data.title}
+                      </a>
+                    ) : (
+                      pub.data.title
+                    )}
+                  </h3>
+
+                  <p class="mt-1.5 text-sm italic text-ink-muted">
+                    {pub.data.journal}
+                    {pub.data.note && (
+                      <span class="not-italic"> · {pub.data.note}</span>
+                    )}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</Base>

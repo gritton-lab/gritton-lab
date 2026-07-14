@@ -1,0 +1,31 @@
+{
+  "heading": "Join our lab team",
+  "intro": "We are seeking talented individuals with a passion for understanding neural circuits at all levels.",
+  "contactEmail": "hgritton@illinois.edu",
+  "positions": [
+    {
+      "title": "Postdoctoral Associates",
+      "open": true,
+      "body": "We are seeking new postdoctoral associates! Potential postdoctoral candidates should have or be completing a Ph.D. in Neuroscience, Bioengineering or a related discipline. Candidates with demonstrated scientific expertise in one of the following areas are especially encouraged to apply: in vivo electrophysiology, in vivo calcium imaging, and/or computational neuroscience.",
+      "howToApply": "Email Dr. Howard Gritton (hgritton@illinois.edu) with a CV, contact information for three references, and a brief statement of research interests."
+    },
+    {
+      "title": "Graduate Students",
+      "open": true,
+      "body": "We are currently accepting graduate students! We are affiliated with the graduate programs in the Department of Comparative Biosciences and Department of Bioengineering, and the Interdisciplinary Graduate Neuroscience Program at the University of Illinois at Urbana-Champaign.",
+      "howToApply": "Students interested in joining the lab should reach out to Dr. Howard Gritton (hgritton@illinois.edu)."
+    },
+    {
+      "title": "Research Technicians",
+      "open": true,
+      "body": "We have an opening for full-time and part-time research technicians in the lab! Potential applicants should have a bachelor's degree or relevant experience in Neuroscience, Biology, Bioengineering, Computational Neuroscience or a related discipline, as well as strong organizational and communication skills. Strong candidates will have experience in one or more of the following areas: animal behavioral testing, rodent husbandry, computer programming in MATLAB or Python, or electrophysiology. Prior experience with rodent behavioral research is desired, but not required.",
+      "howToApply": "Email a CV, a brief statement of interest, and contact information for 2–3 references to Dr. Gritton (hgritton@illinois.edu)."
+    },
+    {
+      "title": "Undergraduate Students",
+      "open": true,
+      "body": "Undergraduate students interested in joining the lab should reach out to Dr. Howard Gritton for information on available positions. Students should be willing to commit to roughly 15 hours per week during the school year. Students with a demonstrated dedication to working through the summer have the opportunity for paid full-time summer internships.",
+      "howToApply": "Email Dr. Howard Gritton (hgritton@illinois.edu) with a brief statement of why you're interested in working in this lab, and a description of your availability and schedule."
+    }
+  ]
+}

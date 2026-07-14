@@ -1,0 +1,70 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import positions from '../data/positions.json';
+
+const open = positions.positions.filter((p) => p.open);
+const closed = positions.positions.filter((p) => !p.open);
+---
+
+<Base title="Lab Positions" description={positions.intro}>
+  <PageHeader title={positions.heading} intro={positions.intro} />
+
+  <div class="container-page py-16">
+    <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-start">
+      <div class="space-y-6">
+        {
+          open.map((position) => (
+            <section class="rounded-lg border border-line bg-surface p-8">
+              <div class="flex flex-wrap items-center gap-3">
+                <h2 class="text-xl">{position.title}</h2>
+                <span class="rounded-full bg-illini-orange/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-illini-orange-dark">
+                  Now recruiting
+                </span>
+              </div>
+
+              <p class="mt-4 leading-relaxed text-ink-muted">{position.body}</p>
+
+              <div class="mt-6 rounded-md border border-line bg-surface-sunken p-5">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-illini-blue">
+                  How to apply
+                </h3>
+                <p class="mt-2 text-sm leading-relaxed text-ink-muted">
+                  {position.howToApply}
+                </p>
+              </div>
+            </section>
+          ))
+        }
+
+        {
+          closed.length > 0 && (
+            <section class="rounded-lg border border-line bg-surface-sunken p-8">
+              <h2 class="text-base">Not currently recruiting</h2>
+              <ul class="mt-3 space-y-1 text-sm text-ink-muted">
+                {closed.map((position) => (
+                  <li>{position.title}</li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="rounded-lg border border-line bg-surface-sunken p-6 lg:sticky lg:top-28">
+        <h2 class="text-base">Get in touch</h2>
+        <p class="mt-3 text-sm leading-relaxed text-ink-muted">
+          All applications go directly to Dr. Gritton. Include a CV and a brief
+          statement of your research interests.
+        </p>
+        <a
+          href={`mailto:${positions.contactEmail}`}
+          class="mt-5 inline-block rounded-md bg-illini-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-illini-blue-light"
+        >
+          Email Dr. Gritton
+        </a>
+        <p class="mt-4 text-xs text-ink-muted">{positions.contactEmail}</p>
+      </aside>
+    </div>
+  </div>
+</Base>

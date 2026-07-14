@@ -1,0 +1,73 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import VideoEmbed from '../../components/VideoEmbed.astro';
+
+export const getStaticPaths = (async () => {
+  const posts = await getCollection('news', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  post: CollectionEntry<'news'>;
+}
+
+const { post } = Astro.props;
+const { title, date, summary, image, imageAlt, video } = post.data;
+const { Content } = await render(post);
+---
+
+<Base title={title} description={summary}>
+  <article>
+    <header class="border-b border-line bg-surface-sunken">
+      <div class="container-page py-14 sm:py-16">
+        <a
+          href="/news"
+          class="text-sm font-semibold text-illini-blue hover:text-illini-orange-dark"
+        >
+          ← All news
+        </a>
+        <FormattedDate
+          date={date}
+          class="mt-8 block text-xs font-semibold uppercase tracking-wide text-illini-orange-dark"
+        />
+        <h1 class="mt-2 max-w-3xl text-3xl sm:text-4xl">{title}</h1>
+        {
+          summary && (
+            <p class="mt-5 max-w-2xl text-lg leading-relaxed text-ink-muted">
+              {summary}
+            </p>
+          )
+        }
+      </div>
+    </header>
+
+    <div class="container-page py-14">
+      {
+        image && (
+          <figure class="mb-10">
+            <img
+              src={image}
+              alt={imageAlt}
+              class="w-full rounded-lg border border-line bg-surface-sunken"
+            />
+            {imageAlt && (
+              <figcaption class="mt-2 text-xs text-ink-muted">{imageAlt}</figcaption>
+            )}
+          </figure>
+        )
+      }
+
+      {video && <VideoEmbed url={video} title={title} />}
+
+      <div class="prose-lab">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Base>

@@ -1,0 +1,79 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import NewsCard from '../../components/NewsCard.astro';
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = (await getCollection('news', ({ data }) => !data.draft)).sort(
+    (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+  );
+  return paginate(posts, { pageSize: 9 });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: Page<CollectionEntry<'news'>>;
+}
+
+const { page } = Astro.props;
+---
+
+<Base
+  title={page.currentPage > 1 ? `News · Page ${page.currentPage}` : 'News'}
+  description="Awards, talks, papers, and happenings from the Gritton Lab."
+>
+  <PageHeader
+    title="News"
+    intro="Awards, conference talks, new papers, and happenings around the lab."
+  />
+
+  <div class="container-page py-16">
+    {
+      page.data.length === 0 ? (
+        <p class="text-ink-muted">No news posts yet.</p>
+      ) : (
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {page.data.map((post) => (
+            <NewsCard post={post} />
+          ))}
+        </div>
+      )
+    }
+
+    {
+      page.lastPage > 1 && (
+        <nav
+          class="mt-14 flex items-center justify-between border-t border-line pt-8"
+          aria-label="Pagination"
+        >
+          {page.url.prev ? (
+            <a
+              href={page.url.prev}
+              class="rounded-md border border-line px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
+            >
+              ← Newer
+            </a>
+          ) : (
+            <span />
+          )}
+
+          <span class="text-sm text-ink-muted">
+            Page {page.currentPage} of {page.lastPage}
+          </span>
+
+          {page.url.next ? (
+            <a
+              href={page.url.next}
+              class="rounded-md border border-line px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
+            >
+              Older →
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )
+    }
+  </div>
+</Base>

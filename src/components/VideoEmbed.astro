@@ -1,0 +1,70 @@
+---
+interface Props {
+  url: string;
+  title?: string;
+}
+
+const { url, title = 'Embedded video' } = Astro.props;
+
+/**
+ * Turn a YouTube or Vimeo page URL into its embed URL, so an editor can paste
+ * the link straight from the browser address bar and still get a working player.
+ * Returns null for anything we don't recognize, and we render a plain link.
+ */
+function toEmbedUrl(raw: string): string | null {
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    return null;
+  }
+
+  const host = u.hostname.replace(/^www\./, '');
+
+  if (host === 'youtu.be') {
+    const id = u.pathname.slice(1);
+    return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+  }
+  if (host === 'youtube.com' || host === 'm.youtube.com') {
+    if (u.pathname === '/watch') {
+      const id = u.searchParams.get('v');
+      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+    }
+    const m = u.pathname.match(/^\/(?:embed|shorts|live)\/([\w-]+)/);
+    return m ? `https://www.youtube-nocookie.com/embed/${m[1]}` : null;
+  }
+  if (host === 'vimeo.com') {
+    const id = u.pathname.split('/').filter(Boolean)[0];
+    return /^\d+$/.test(id ?? '') ? `https://player.vimeo.com/video/${id}` : null;
+  }
+  return null;
+}
+
+const embed = toEmbedUrl(url);
+---
+
+{
+  embed ? (
+    <div class="my-8 aspect-video overflow-hidden rounded-lg border border-line bg-surface-sunken">
+      <iframe
+        src={embed}
+        title={title}
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        class="h-full w-full border-0"
+      />
+    </div>
+  ) : (
+    <p class="my-8">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-illini-blue underline decoration-illini-orange decoration-2 underline-offset-4"
+      >
+        Watch the video
+      </a>
+    </p>
+  )
+}

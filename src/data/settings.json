@@ -1,0 +1,17 @@
+{
+  "siteTitle": "Gritton Lab",
+  "tagline": "Neural circuits, attention, and the brain in health and disease",
+  "announcement": {
+    "enabled": false,
+    "text": "",
+    "linkLabel": "",
+    "linkUrl": ""
+  },
+  "social": {
+    "googleScholar": "https://scholar.google.com/citations?hl=en&user=F8ILu64AAAAJ",
+    "pubmed": "https://www.ncbi.nlm.nih.gov/myncbi/howard.gritton.1/bibliography/public/",
+    "twitter": "",
+    "bluesky": "",
+    "github": ""
+  }
+}
