@@ -6,7 +6,6 @@ import PageHero from '../../components/PageHero.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import Card from '../../components/Card.astro';
 import CtaBand from '../../components/CtaBand.astro';
-import FigureBand from '../../components/FigureBand.astro';
 
 export const getStaticPaths = (async ({ paginate }) => {
   const posts = (await getCollection('news', ({ data }) => !data.draft)).sort(
@@ -88,13 +87,6 @@ const years = [...new Set(page.data.map((post) => post.data.date.getUTCFullYear(
     </div>
   </section>
 
-
-  <FigureBand
-    image="/images/uploads/temple-ben-howard.jpg"
-    alt="Temple Grandin visiting the Gritton Lab at the Beckman Institute"
-    label="Beckman Institute"
-    caption="Temple Grandin, on how animal models can move autism research forward."
-  />
 
   <CtaBand
     eyebrow="Elsewhere"

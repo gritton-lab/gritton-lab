@@ -4,7 +4,6 @@ import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import CtaBand from '../components/CtaBand.astro';
-import FigureBand from '../components/FigureBand.astro';
 import settings from '../data/settings.json';
 
 const publications = (await getCollection('publications')).sort(
@@ -129,13 +128,6 @@ const span = years.length ? `${years.at(-1)}–${years[0]}` : '—';
     </div>
   </section>
 
-
-  <FigureBand
-    image="/images/uploads/eric-isur-2024.jpg"
-    alt="Undergraduate researchers presenting posters at the 2024 ISUR and URS expos"
-    label="Undergraduate research expo"
-    caption="Work from the lab, presented by the students who ran it."
-  />
 
   <CtaBand
     eyebrow="Behind the papers"
