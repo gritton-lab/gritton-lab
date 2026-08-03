@@ -1,0 +1,130 @@
+---
+/**
+ * A full-bleed photographic band, used to break up long pages.
+ *
+ * This is the page's punctuation. It runs edge to edge, carries a caption over
+ * the image, and replaces the two devices that were doing this job badly
+ * before: a hairline rule above every heading, and alternating grey bands.
+ * Unlike either of those, a band here always carries real content.
+ *
+ * Deliberately PHOTOGRAPHS only. The lab's scientific figures are labelled
+ * multi-panel diagrams on white — an edge-to-edge cover crop would slice off
+ * their axis labels, scale bars, and legends. Those stay contained inside
+ * cards, where they stay legible.
+ */
+interface Props {
+  image: string;
+  alt: string;
+  /** Small mono label, e.g. the venue or the occasion. */
+  label?: string;
+  caption?: string;
+  /** `short` for a divider, `tall` for a moment that should carry more weight. */
+  height?: 'short' | 'tall';
+  /** Nudges the crop when the subject is not centred in the frame. */
+  focus?: string;
+}
+
+const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro.props;
+---
+
+<figure class:list={['figure-band', height === 'tall' && 'figure-band--tall']}>
+  <img src={image} alt={alt} loading="lazy" decoding="async" style={`object-position:${focus}`} />
+  <div class="figure-band__wash" aria-hidden="true"></div>
+
+  {
+    (label || caption) && (
+      <figcaption class="figure-band__caption">
+        <div class="container-page">
+          {label && <p class="figure-band__label">{label}</p>}
+          {caption && <p class="figure-band__text">{caption}</p>}
+        </div>
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .figure-band {
+    position: relative;
+    display: flex;
+    /* The floor is set by the caption, not the picture: below about 17rem the
+       label and caption crowd each other on a narrow screen. */
+    height: clamp(17rem, 30vw, 22rem);
+    align-items: flex-end;
+    overflow: hidden;
+    background: var(--ink-deep);
+  }
+
+  .figure-band--tall { height: clamp(19rem, 40vw, 30rem); }
+
+  .figure-band img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Desaturated slightly so candid photography sits with the palette
+       instead of competing with the accent blue. */
+    filter: saturate(0.72) contrast(1.04);
+  }
+
+  /*
+   * A wash weighted to the bottom, so the caption always has contrast to sit
+   * on regardless of what is behind it in the photograph.
+   */
+  /*
+   * Weighted hard to the bottom. These are candid photographs with unpredictable
+   * exposure — a pale floor or a lit poster board sits directly behind the
+   * caption on some of them — so the wash has to guarantee contrast rather than
+   * assume a dark subject.
+   */
+  .figure-band__wash {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        0deg,
+        rgba(14, 17, 26, 0.94) 0%,
+        rgba(14, 17, 26, 0.82) 18%,
+        rgba(14, 17, 26, 0.45) 45%,
+        rgba(14, 17, 26, 0.1) 100%
+      );
+  }
+
+  .figure-band__caption {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    padding-block: clamp(1.25rem, 3vw, 2rem);
+    color: #fff;
+  }
+
+  .figure-band__label {
+    max-width: 40ch;
+    margin-bottom: 0.5rem;
+    color: var(--sky);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 700px) {
+    .figure-band__label {
+      font-size: 0.64rem;
+      letter-spacing: 0.14em;
+    }
+  }
+
+  .figure-band__text {
+    max-width: 46ch;
+    color: rgba(255, 255, 255, 0.92);
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+    font-weight: 500;
+    letter-spacing: -0.012em;
+    line-height: 1.35;
+  }
+</style>

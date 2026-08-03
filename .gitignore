@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # internal project brief — not for the public repo
 docs/PROJECT_CONTEXT.md
+
+# playwright-mcp debug artifacts
+.playwright-mcp/

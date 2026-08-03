@@ -1,0 +1,103 @@
+---
+/**
+ * The one card on the site.
+ *
+ * Projects, people, and news all render through this component so that a row
+ * of cards on any page has the same media ratio, the same internal padding,
+ * the same title size, and a footer pinned to the bottom edge. Cards in a row
+ * are always equal height and their footers always align, whatever the length
+ * of the summary.
+ *
+ * `media` picks how the image is treated:
+ *   photo   — cover crop, for photographs
+ *   figure  — contained and padded on white, for scientific figures
+ *   portrait— taller 4:5 crop anchored to the top, for headshots
+ *
+ * When `image` is absent a hatched placeholder of the correct ratio is drawn,
+ * so a missing photo never changes the height of its row.
+ */
+interface Props {
+  href: string;
+  title: string;
+  eyebrow?: string;
+  summary?: string;
+  image?: string;
+  imageAlt?: string;
+  media?: 'photo' | 'figure' | 'portrait';
+  /** Small labels below the summary — methods, programmes, topics. */
+  tags?: string[];
+  /** Left-hand footer text; the arrow is always drawn on the right. */
+  footLabel?: string;
+  footNote?: string;
+  class?: string;
+}
+
+const {
+  href,
+  title,
+  eyebrow,
+  summary,
+  image,
+  imageAlt = '',
+  media = 'photo',
+  tags = [],
+  footLabel = 'Read more',
+  footNote,
+  class: className,
+} = Astro.props;
+---
+
+<a href={href} class:list={['card', className]}>
+  {
+    image ? (
+      <div
+        class:list={[
+          'card__media',
+          media === 'figure' && 'card__media--figure',
+          media === 'portrait' && 'card__media--portrait',
+        ]}
+      >
+        <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
+      </div>
+    ) : (
+      <div
+        class:list={[
+          'card__media',
+          'card__media--empty',
+          media === 'portrait' && 'card__media--portrait',
+        ]}
+        aria-hidden="true"
+      >
+        <span>Gritton Lab</span>
+      </div>
+    )
+  }
+
+  <div class="card__body">
+    {eyebrow && <p class="card__eyebrow">{eyebrow}</p>}
+    <h3 class="card__title">{title}</h3>
+    {summary && <p class="card__summary">{summary}</p>}
+
+    {
+      tags.length > 0 && (
+        <ul class="tag-row card__tags">
+          {tags.map((tag) => (
+            <li class="tag">{tag}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    <div class="card__foot">
+      <span>{footNote ?? footLabel}</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    </div>
+  </div>
+</a>
+
+<style>
+  /* Tags sit just above the footer, never pushed apart from the summary. */
+  .card__tags { margin-top: 0.25rem; }
+</style>

@@ -1,0 +1,177 @@
+---
+/**
+ * The contact form.
+ *
+ * It renders no heading of its own — the page that places it supplies the
+ * SectionHeading, exactly like every other block on the site. The previous
+ * version carried its own eyebrow, h2, and intro, which meant the contact page
+ * showed the same heading and the same sentence twice in a row.
+ */
+interface Props {
+  id?: string;
+}
+
+const { id = 'contact-form' } = Astro.props;
+---
+
+<div class="contact-form" id={id}>
+  <div class="contact-form__success" role="status" data-form-success hidden>
+    <strong>Message received.</strong> Thank you for reaching out to the Gritton Lab.
+  </div>
+
+  <form
+    name="lab-contact"
+    method="POST"
+    action={`/contact/?sent=true#${id}`}
+    data-netlify="true"
+    netlify-honeypot="bot-field"
+  >
+    <input type="hidden" name="form-name" value="lab-contact" />
+    <p class="contact-form__bot" aria-hidden="true">
+      <label>Do not fill this out: <input name="bot-field" tabindex="-1" autocomplete="off" /></label>
+    </p>
+
+    <div class="contact-form__row">
+      <label>
+        <span>Name</span>
+        <input type="text" name="name" autocomplete="name" required placeholder="Your name" />
+      </label>
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" autocomplete="email" required placeholder="you@example.com" />
+      </label>
+    </div>
+
+    <label>
+      <span>What can we help with?</span>
+      <select name="inquiry" required>
+        <option value="" selected disabled>Select an inquiry</option>
+        <option>Research collaboration</option>
+        <option>Joining the lab</option>
+        <option>Media or speaking request</option>
+        <option>Publication or data question</option>
+        <option>General inquiry</option>
+      </select>
+    </label>
+
+    <label>
+      <span>Message</span>
+      <textarea name="message" rows="6" required placeholder="Share a little context…"></textarea>
+    </label>
+
+    <div class="contact-form__submit">
+      <button type="submit" class="button button--primary">
+        Send message
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </button>
+      <p class="note">We usually reply within a few working days.</p>
+    </div>
+  </form>
+</div>
+
+<script>
+  if (new URLSearchParams(window.location.search).get('sent') === 'true') {
+    document.querySelectorAll<HTMLElement>('[data-form-success]').forEach((message) => {
+      message.hidden = false;
+    });
+  }
+</script>
+
+<style>
+  .contact-form {
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+  }
+
+  form {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .contact-form__row {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  label {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  label > span {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 3rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 0;
+    background: var(--paper);
+    padding: 0.8rem 0.9rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+
+  textarea {
+    min-height: 9rem;
+    resize: vertical;
+  }
+
+  input::placeholder,
+  textarea::placeholder { color: var(--ink-muted); }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--signal);
+    background: var(--paper-bright);
+  }
+
+  .contact-form__submit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-md);
+  }
+
+  .contact-form__success {
+    margin-bottom: var(--space-md);
+    border-left: 3px solid var(--signal);
+    background: var(--paper);
+    padding: 0.9rem 1.1rem;
+    color: var(--ink);
+  }
+
+  .contact-form__bot {
+    position: absolute;
+    left: -9999px;
+  }
+
+  @media (min-width: 650px) {
+    .contact-form__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .contact-form__submit {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+    }
+
+    .contact-form__submit .button { flex: none; }
+  }
+</style>

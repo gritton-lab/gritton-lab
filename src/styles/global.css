@@ -1,140 +1,815 @@
 @import "tailwindcss";
 
 /**
- * Design tokens. Illini Orange and Blue are used as accents on a neutral,
- * journal-like base — the university cue should read as affiliation, not
- * as a theme.
+ * Gritton Lab — design system
+ *
+ * The governing rule of this rebuild: THERE IS ONE LEFT RAIL. Every eyebrow,
+ * heading, paragraph, card, row, and rule on every page begins at the same x
+ * position, set by `.container-page`. Nothing is centred, nothing is indented
+ * to a different column than the content it introduces. The previous build
+ * placed section titles at grid column 5 while their own content started at
+ * column 1, which is what made each page read as a set of unrelated blocks
+ * floating in whitespace.
+ *
+ * Colour is unchanged from the previous build — cool slate for the dark bands
+ * and imagery, white and pale slate for reading surfaces, one calm blue as the
+ * accent. The Illinois Block I in the header is deliberately NOT tokenised; it
+ * keeps its official blue and orange regardless of this palette.
  */
 @theme {
-  --color-illini-orange: #ff5f05;
-  --color-illini-orange-dark: #d94e00;
-  --color-illini-blue: #13294b;
-  --color-illini-blue-light: #1d3a68;
+  --color-ink: #1b1f2a;
+  --color-ink-deep: #0e111a;
+  --color-ink-soft: #3f4757;
+  --color-ink-muted: #667085;
+  --color-paper: #f2f3f7;
+  --color-paper-bright: #ffffff;
+  --color-paper-deep: #e5e8ef;
+  --color-signal: #2b6cb0;
+  --color-signal-dark: #1f5288;
+  --color-acid: #7dd3fc;
+  --color-sky: #7dd3fc;
+  --color-line: rgba(27, 31, 42, 0.13);
+  --color-line-strong: rgba(27, 31, 42, 0.26);
 
-  --color-ink: #16181d;
-  --color-ink-muted: #545a66;
-  --color-line: #e3e6ea;
-  --color-surface: #ffffff;
-  --color-surface-sunken: #f6f7f9;
+  --font-display: "DM Sans", system-ui, -apple-system, "Segoe UI", Helvetica, sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", Helvetica, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
 
-  --font-sans: "Inter var", "Inter", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
-  --font-serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+:root {
+  --ink: #1b1f2a;
+  --ink-deep: #0e111a;
+  --ink-soft: #3f4757;
+  --ink-muted: #667085;
+  --paper: #f2f3f7;
+  --paper-bright: #ffffff;
+  --paper-deep: #e5e8ef;
+  --signal: #2b6cb0;
+  --signal-dark: #1f5288;
+  --sky: #7dd3fc;
+  --line: rgba(27, 31, 42, 0.13);
+  --line-strong: rgba(27, 31, 42, 0.26);
+
+  --header-height: 4.75rem;
+
+  /*
+   * The measure. `--rail` is the page gutter and `--measure` the content width;
+   * every container derives from these two numbers so the left rail cannot
+   * drift between components.
+   */
+  --rail: clamp(1.25rem, 5vw, 4rem);
+  --measure: 74rem;
+
+  /*
+   * One vertical rhythm. Sections use --space-section, the gap between a
+   * section heading and its content uses --space-block, and everything smaller
+   * steps down from there. Pages do not invent their own intervals.
+   *
+   * Space is the ONLY thing separating one section from the next — there are
+   * no rules above headings and no alternating background bands — so the
+   * interval has to read as a break on its own. Note it applies to BOTH edges
+   * of a section, so the visible gap between two sections is twice this: about
+   * 8.5rem on a desktop. Set much higher and short sections read as gaps in
+   * the page rather than as breathing room.
+   */
+  --space-section: clamp(2.75rem, 4.5vw, 4.25rem);
+  --space-block: clamp(2rem, 3.4vw, 3rem);
+  --space-lg: clamp(1.5rem, 2.4vw, 2.25rem);
+  --space-md: 1.25rem;
+  --space-sm: 0.75rem;
+  --space-xs: 0.4rem;
+
+  /* Card and grid gaps are shared so grids line up across pages. */
+  --gap-grid: clamp(1.25rem, 2vw, 1.75rem);
+
+  --ease-spring: cubic-bezier(0.2, 0.85, 0.25, 1);
+  --shadow-lift: 0 0.6rem 1.5rem rgba(15, 19, 32, 0.09);
+
+  --hero-wash:
+    linear-gradient(90deg, rgba(14, 17, 26, 0.93) 0%, rgba(14, 17, 26, 0.74) 45%, rgba(14, 17, 26, 0.34) 100%),
+    linear-gradient(0deg, rgba(14, 17, 26, 0.8), transparent 55%);
 }
 
 @layer base {
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
+    scroll-padding-top: calc(var(--header-height) + 1.5rem);
+    overflow-x: clip;
+    background: var(--paper-bright);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    background-color: var(--color-surface);
-    color: var(--color-ink);
+    min-width: 20rem;
+    overflow-x: clip;
+    background: var(--paper-bright);
+    color: var(--ink);
     font-family: var(--font-sans);
+    font-size: 1rem;
     line-height: 1.65;
   }
 
+  /*
+   * A restrained type scale. The previous build topped out near 4.6rem, which
+   * forced two- and three-word orphan lines and made every heading feel like a
+   * poster. Headings here stay large enough to lead but small enough that a
+   * full sentence fits on one or two lines.
+   */
   h1,
   h2,
   h3,
   h4 {
-    color: var(--color-illini-blue);
+    color: var(--ink);
+    font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: -0.018em;
-    line-height: 1.2;
+    line-height: 1.15;
+    overflow-wrap: break-word;
     text-wrap: balance;
   }
 
-  a {
-    color: inherit;
+  h1 {
+    font-size: clamp(2.1rem, 3.9vw, 3.15rem);
+    line-height: 1.08;
+    letter-spacing: -0.024em;
   }
 
-  /* Visible focus for keyboard users, on every interactive element. */
-  :where(a, button, input, textarea, select, summary):focus-visible {
-    outline: 2px solid var(--color-illini-orange);
+  h2 {
+    font-size: clamp(1.6rem, 2.7vw, 2.2rem);
+    line-height: 1.14;
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+    letter-spacing: -0.012em;
+    line-height: 1.3;
+  }
+
+  h4 {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  h1 em,
+  h2 em,
+  h3 em,
+  h4 em { font-style: normal; }
+
+  p { text-wrap: pretty; }
+  a { color: inherit; }
+
+  button,
+  input,
+  select,
+  textarea { font: inherit; }
+
+  button,
+  summary { -webkit-tap-highlight-color: transparent; }
+
+  :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--signal);
     outline-offset: 3px;
-    border-radius: 2px;
   }
 
   ::selection {
-    background-color: color-mix(in srgb, var(--color-illini-orange) 22%, white);
+    background: var(--sky);
+    color: var(--ink-deep);
   }
+
+  .reveal { opacity: 1; }
 }
 
 @layer components {
-  /* Page width: one measure for every page, so headers, text, and cards align. */
+  /* ------------------------------------------------------------------
+   * The rail
+   * ---------------------------------------------------------------- */
+
   .container-page {
     width: 100%;
-    max-width: 76rem;
+    max-width: calc(var(--measure) + var(--rail) * 2);
     margin-inline: auto;
-    padding-inline: 1.5rem;
+    padding-inline: var(--rail);
   }
 
-  /* Body copy inside markdown-rendered content. */
-  .prose-lab {
-    color: var(--color-ink);
-    max-width: 68ch;
-  }
-  .prose-lab p {
-    margin-block: 1.1em;
-  }
-  .prose-lab a {
-    color: var(--color-illini-blue);
-    text-decoration: underline;
-    text-decoration-color: var(--color-illini-orange);
-    text-underline-offset: 3px;
-    text-decoration-thickness: 2px;
-  }
-  .prose-lab a:hover {
-    color: var(--color-illini-orange-dark);
-  }
-  .prose-lab h2 {
-    font-size: 1.4rem;
-    margin-block: 1.8em 0.6em;
-  }
-  .prose-lab h3 {
-    font-size: 1.15rem;
-    margin-block: 1.6em 0.5em;
-  }
-  .prose-lab ul {
-    list-style: disc;
-    padding-left: 1.3em;
-    margin-block: 1.1em;
-  }
-  .prose-lab li {
-    margin-block: 0.35em;
-  }
-  .prose-lab img {
-    border-radius: 0.5rem;
-    border: 1px solid var(--color-line);
-    margin-block: 1.75em;
-  }
-  .prose-lab strong {
-    font-weight: 600;
-    color: var(--color-illini-blue);
+  /*
+   * A reading column, for long-form prose only. It is left-aligned on the same
+   * rail — it is narrower, never centred, so the left edge never moves.
+   */
+  .container-page--narrow { max-width: calc(56rem + var(--rail) * 2); }
+  .container-page--wide { max-width: calc(84rem + var(--rail) * 2); }
+
+  /*
+   * A 12-column grid for the few genuinely two-column layouts. The label
+   * column and the main column are ADJACENT — there is no empty gutter column
+   * between them, which is what previously opened a void down the middle of
+   * every page.
+   */
+  .grid-12 {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gap-grid);
   }
 
-  /* The thin orange rule that marks a section heading. */
-  .rule-accent::after {
-    content: "";
+  .col-side,
+  .col-main,
+  .col-full,
+  .col-inset { grid-column: 1 / -1; }
+
+  @media (min-width: 900px) {
+    .grid-12 {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--gap-grid);
+    }
+
+    .col-side { grid-column: 1 / span 3; }
+    .col-main { grid-column: 4 / span 9; }
+    .col-full { grid-column: 1 / -1; }
+    .col-inset { grid-column: 1 / span 8; }
+  }
+
+  /* ------------------------------------------------------------------
+   * Sections
+   * ---------------------------------------------------------------- */
+
+  .page-section { padding-block: var(--space-section); }
+
+  /* A masthead and the first section below it are one block, not two. */
+  .page-hero + .page-section { padding-top: 0; }
+
+  /*
+   * The page is one continuous white surface. There are no alternating light
+   * and grey bands: striping a page with background colour turned every scroll
+   * into a series of unrelated slabs, and the tint never carried meaning — it
+   * only alternated. The dark band survives because it does carry meaning: it
+   * marks the hero and the single closing call to action, and nothing else.
+   */
+  .page-section--dark {
+    background: var(--ink-deep);
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .page-section--dark h1,
+  .page-section--dark h2,
+  .page-section--dark h3,
+  .page-section--dark h4 { color: #fff; }
+
+  /* The one standard gap between a section heading and its content. */
+  .section-body { margin-top: var(--space-block); }
+
+  /* ------------------------------------------------------------------
+   * Text primitives
+   * ---------------------------------------------------------------- */
+
+  .eyebrow {
     display: block;
-    width: 3rem;
-    height: 3px;
-    margin-top: 0.85rem;
-    background-color: var(--color-illini-orange);
-    border-radius: 2px;
+    color: var(--signal);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .eyebrow--muted { color: var(--ink-muted); }
+  .eyebrow--light { color: var(--sky); }
+  .page-section--dark .eyebrow { color: var(--sky); }
+
+  /*
+   * The standard supporting paragraph. One size, one measure, everywhere —
+   * the previous build ran ledes anywhere from 13px to 21px depending on the
+   * page, which is a large part of why the site read as unfinished.
+   */
+  .lede {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: clamp(1.02rem, 1.15vw, 1.12rem);
+    line-height: 1.7;
+  }
+
+  .lede > * + * { margin-top: 1em; }
+  .page-section--dark .lede { color: rgba(255, 255, 255, 0.72); }
+
+  /* An opening statement that carries a section on its own. */
+  .lede--lead {
+    max-width: 46ch;
+    color: var(--ink);
+    font-size: clamp(1.3rem, 2.1vw, 1.7rem);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.35;
+  }
+
+  .page-section--dark .lede--lead { color: #fff; }
+
+  .note {
+    color: var(--ink-muted);
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+
+  .meta {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  /* ------------------------------------------------------------------
+   * Buttons and links
+   * ---------------------------------------------------------------- */
+
+  .button,
+  .btn {
+    display: inline-flex;
+    min-height: 2.85rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    padding: 0.7rem 1.15rem;
+    color: var(--ink);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .button svg,
+  .btn svg { flex: none; transition: transform 200ms var(--ease-spring); }
+  .button:hover svg,
+  .btn:hover svg { transform: translateX(3px); }
+
+  .button:hover,
+  .btn:hover {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .button--primary,
+  .btn--primary {
+    border-color: var(--signal);
+    background: var(--signal);
+    color: #fff;
+  }
+
+  .button--primary:hover,
+  .btn--primary:hover {
+    border-color: var(--signal-dark);
+    background: var(--signal-dark);
+    color: #fff;
+  }
+
+  .button--ink,
+  .btn--dark {
+    background: var(--ink);
+    color: var(--paper-bright);
+  }
+
+  .button--light,
+  .btn--light {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: transparent;
+    color: #fff;
+  }
+
+  .button--light:hover,
+  .btn--light:hover {
+    border-color: #fff;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  /*
+   * The inline "read more" link. Mono, uppercase, underlined — used for every
+   * secondary navigation cue on the site so they are all recognisably one
+   * thing.
+   */
+  .text-link,
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 0.2rem;
+    color: var(--signal-dark);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 160ms ease, border-color 160ms ease;
+  }
+
+  .text-link svg,
+  .arrow-link svg { transition: transform 200ms var(--ease-spring); }
+
+  .text-link:hover,
+  .arrow-link:hover {
+    border-color: var(--signal);
+    color: var(--signal);
+  }
+
+  .text-link:hover svg,
+  .arrow-link:hover svg { transform: translateX(3px); }
+
+  .page-section--dark .text-link,
+  .page-section--dark .arrow-link {
+    border-bottom-color: rgba(255, 255, 255, 0.35);
+    color: var(--sky);
+  }
+
+  .page-section--dark .text-link:hover,
+  .page-section--dark .arrow-link:hover { border-color: var(--sky); color: #fff; }
+
+  .link-underline {
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+  }
+
+  .link-underline:hover {
+    color: var(--signal);
+    text-decoration-color: currentColor;
+  }
+
+  /* A row of actions, always left-aligned on the rail. */
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm) var(--space-md);
+  }
+
+  /* ------------------------------------------------------------------
+   * Grids
+   *
+   * All card grids use the same track sizing, so a three-up grid on one page
+   * and a four-up grid on another still share a column width and gutter.
+   * `auto-fill` with a min track keeps a short final row left-aligned and
+   * correctly sized instead of stretching two cards across four columns.
+   * ---------------------------------------------------------------- */
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: var(--gap-grid);
+    align-items: stretch;
+  }
+
+  .card-grid--2 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr)); }
+  .card-grid--3 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); }
+  .card-grid--4 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+
+  /* ------------------------------------------------------------------
+   * The card
+   *
+   * One card for the whole site. Fixed media ratio, fixed internal padding,
+   * and a body laid out so that titles across a row start at the same y and
+   * footers sit on the bottom edge regardless of summary length.
+   * ---------------------------------------------------------------- */
+
+  .card {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .card:hover,
+  .card:focus-visible {
+    border-color: var(--ink);
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-2px);
+  }
+
+  .card__media {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 300ms ease;
+  }
+
+  /*
+   * Scientific figures are diagrams on white, not photographs — they must be
+   * contained and padded or the crop destroys them.
+   */
+  .card__media--figure { background: var(--paper-bright); }
+  .card__media--figure img {
+    object-fit: contain;
+    padding: clamp(0.75rem, 1.6vw, 1.25rem);
+  }
+
+  /* Portraits crop to the top so faces are never cut off at the chin. */
+  .card__media--portrait { aspect-ratio: 4 / 5; }
+  .card__media--portrait img { object-position: center top; }
+
+  .card:hover .card__media img { transform: scale(1.03); }
+  .card__media--figure img,
+  .card:hover .card__media--figure img { transform: none; }
+
+  /*
+   * A placeholder that keeps the grid even when an item has no image. The
+   * previous build dropped in flat dark rectangles of a different height,
+   * which broke every row they appeared in.
+   */
+  .card__media--empty {
+    display: grid;
+    place-items: center;
+    background:
+      repeating-linear-gradient(
+        135deg,
+        var(--paper) 0 10px,
+        var(--paper-deep) 10px 20px
+      );
+  }
+
+  .card__media--empty span {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: var(--space-md);
+  }
+
+  .card__eyebrow {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .card__title {
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.3;
+  }
+
+  .card__summary {
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  /* Pushed to the bottom so every footer in a row sits on one line. */
+  .card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-top: auto;
+    padding-top: var(--space-sm);
+    color: var(--signal-dark);
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .card__foot svg { transition: transform 200ms var(--ease-spring); }
+  .card:hover .card__foot svg { transform: translateX(3px); }
+
+  /* Small tags for methods, programmes, and topics. */
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .tag {
+    border: 1px solid var(--line-strong);
+    padding: 0.24rem 0.5rem;
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ------------------------------------------------------------------
+   * Ruled lists — publications, positions, roster figures
+   * ---------------------------------------------------------------- */
+
+  /*
+   * Row hairlines are kept here because a 25-entry bibliography genuinely
+   * needs them to stay scannable — they do work rather than decorate. They are
+   * deliberately faint, and the list draws no heavy rule at its top: the
+   * heading above it already says where the list begins.
+   */
+  .ruled-list {
+    border-top: 1px solid var(--line);
+  }
+
+  .ruled-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-sm) var(--space-lg);
+    border-bottom: 1px solid var(--line);
+    padding-block: var(--space-md);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a.ruled-row { transition: background-color 160ms ease; }
+  a.ruled-row:hover { background: var(--paper); }
+
+  .ruled-row__index {
+    color: var(--signal);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+  }
+
+  .ruled-row__body { display: grid; gap: 0.35rem; min-width: 0; }
+
+  .ruled-row__title {
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.35;
+  }
+
+  .ruled-row__note {
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  .ruled-row__meta {
+    color: var(--ink-muted);
+    font-size: 0.82rem;
+    font-style: italic;
+  }
+
+  .ruled-row__action {
+    align-self: center;
+    justify-self: start;
+  }
+
+  /* An index column appears once there is room for it. */
+  @media (min-width: 700px) {
+    .ruled-row--indexed { grid-template-columns: 2.5rem minmax(0, 1fr) auto; }
+    .ruled-row--split { grid-template-columns: minmax(0, 1fr) auto; }
+    .ruled-row__action { justify-self: end; }
+  }
+
+  .page-section--dark .ruled-list { border-top-color: rgba(255, 255, 255, 0.4); }
+  .page-section--dark .ruled-row { border-bottom-color: rgba(255, 255, 255, 0.16); }
+  .page-section--dark a.ruled-row:hover { background: rgba(255, 255, 255, 0.04); }
+  .page-section--dark .ruled-row__title { color: #fff; }
+  .page-section--dark .ruled-row__note { color: rgba(255, 255, 255, 0.66); }
+  .page-section--dark .ruled-row__index { color: var(--sky); }
+
+
+  /* ------------------------------------------------------------------
+   * Chips / filters
+   * ---------------------------------------------------------------- */
+
+  .chip {
+    display: inline-flex;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 0;
+    background: var(--paper-bright);
+    padding: 0.4rem 0.75rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+
+  .chip:hover { border-color: var(--ink); color: var(--ink); }
+
+  .chip[aria-selected="true"],
+  .chip[aria-pressed="true"] {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .chip__count {
+    color: currentColor;
+    font-size: 0.58rem;
+    opacity: 0.6;
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* ------------------------------------------------------------------
+   * Long-form prose
+   * ---------------------------------------------------------------- */
+
+  .prose-lab {
+    max-width: 68ch;
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    line-height: 1.8;
+  }
+
+  .prose-lab > :first-child { margin-top: 0; }
+  .prose-lab p { margin-block: 1.15em; }
+
+  .prose-lab a {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--signal);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.2em;
+  }
+
+  .prose-lab a:hover { color: var(--signal-dark); }
+
+  .prose-lab h2,
+  .prose-lab h3 { margin-block: 1.8em 0.6em; color: var(--ink); }
+  .prose-lab h2 { font-size: clamp(1.4rem, 2.2vw, 1.75rem); }
+  .prose-lab h3 { font-size: 1.2rem; }
+
+  .prose-lab ul,
+  .prose-lab ol { margin-block: 1.2em; padding-left: 1.3em; }
+  .prose-lab ul { list-style: square; }
+  .prose-lab ol { list-style: decimal; }
+  .prose-lab li { margin-block: 0.4em; }
+
+  .prose-lab img {
+    width: 100%;
+    margin-block: 1.8rem;
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    padding: 0.4rem;
+  }
+
+  .prose-lab strong { color: var(--ink); font-weight: 700; }
+
+  .prose-lab--invert { color: rgba(255, 255, 255, 0.72); }
+  .prose-lab--invert a { color: #fff; }
+  .prose-lab--invert h2,
+  .prose-lab--invert h3 { color: #fff; }
+}
+
+@layer utilities {
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+  html { scroll-behavior: auto; }
+
   *,
   *::before,
   *::after {
+    scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }

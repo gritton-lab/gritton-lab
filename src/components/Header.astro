@@ -1,58 +1,56 @@
 ---
-import settings from '../data/settings.json';
-
 const { pathname } = Astro.url;
 
 const nav = [
-  { label: 'Home', href: '/' },
-  { label: 'Research Projects', href: '/research-projects' },
-  { label: 'Lab Team', href: '/lab-team' },
+  { label: 'About', href: '/about' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'People', href: '/people' },
   { label: 'Publications', href: '/publications' },
-  { label: 'Lab Positions', href: '/lab-positions' },
   { label: 'News', href: '/news' },
   { label: 'Contact', href: '/contact' },
 ];
 
-const isActive = (href: string) =>
-  href === '/' ? pathname === '/' : pathname.startsWith(href);
+const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 ---
 
-<header class="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur">
-  <div class="container-page flex h-20 items-center justify-between gap-6">
-    <a href="/" class="flex items-center gap-3 shrink-0" aria-label="Gritton Lab — home">
-      <img
-        src="/images/uploads/gritton-logo.png"
-        alt=""
-        width="169"
-        height="37"
-        class="h-9 w-auto"
-      />
-      <span class="sr-only">{settings.siteTitle}</span>
-    </a>
+<header class="site-header" data-site-header>
+  <div class="container-page header-inner">
+    <div class="brand-lockup">
+      <a
+        class="illinois-mark"
+        href="https://illinois.edu/"
+        aria-label="University of Illinois Urbana-Champaign"
+      >
+        <!-- Official Block I geometry from the Illinois Web Toolkit. -->
+        <svg viewBox="0 0 24 34.67" aria-hidden="true">
+          <path class="illinois-mark__outline" d="M24 9.33V0H0v9.33h5.33v16H0v9.33h24v-9.33h-5.33v-16H24zm-5.33 17.34h4v6.67H1.33v-6.67h4c.74 0 1.33-.6 1.33-1.33v-16C6.67 8.6 6.07 8 5.33 8h-4V1.33h21.33V8h-4c-.74 0-1.33.6-1.33 1.33v16c0 .74.6 1.34 1.34 1.34z" />
+          <path class="illinois-mark__fill" d="M18.67 8h4V1.33H1.33V8h4c.74 0 1.33.6 1.33 1.33v16c0 .74-.6 1.33-1.33 1.33h-4v6.67h21.33v-6.67h-4c-.74 0-1.33-.6-1.33-1.33v-16c0-.73.6-1.33 1.34-1.33z" />
+        </svg>
+      </a>
+      <a class="brand-home" href="/" aria-label="Gritton Lab home">
+        <img
+          src="/images/uploads/gritton-logo.png"
+          alt="Gritton Lab"
+          width="338"
+          height="74"
+        />
+      </a>
+      <a class="brand-institution" href="https://illinois.edu/">
+        University of Illinois Urbana-Champaign
+      </a>
+    </div>
 
-    <!-- Desktop navigation -->
-    <nav class="hidden lg:block" aria-label="Main">
-      <ul class="flex items-center gap-1">
+    <nav class="desktop-navigation" aria-label="Main navigation">
+      <ul>
         {
           nav.map((item) => (
             <li>
               <a
                 href={item.href}
+                class:list={{ active: isActive(item.href) }}
                 aria-current={isActive(item.href) ? 'page' : undefined}
-                class:list={[
-                  'relative rounded px-3 py-2 text-[0.9rem] font-medium transition-colors',
-                  isActive(item.href)
-                    ? 'text-illini-blue'
-                    : 'text-ink-muted hover:text-illini-blue',
-                ]}
               >
                 {item.label}
-                {isActive(item.href) && (
-                  <span
-                    aria-hidden="true"
-                    class="absolute inset-x-3 -bottom-px h-0.5 rounded bg-illini-orange"
-                  />
-                )}
               </a>
             </li>
           ))
@@ -60,44 +58,291 @@ const isActive = (href: string) =>
       </ul>
     </nav>
 
-    <!-- Mobile menu toggle: a checkbox so the nav works without JavaScript -->
-    <input type="checkbox" id="nav-toggle" class="peer sr-only lg:hidden" />
-    <label
-      for="nav-toggle"
-      class="cursor-pointer rounded p-2 text-illini-blue lg:hidden"
-      aria-label="Toggle navigation menu"
+    <button
+      class="menu-button"
+      type="button"
+      aria-expanded="false"
+      aria-controls="mobile-navigation"
+      aria-label="Open navigation"
+      data-menu-button
     >
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <line x1="3" y1="7" x2="21" y2="7"></line>
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="17" x2="21" y2="17"></line>
-      </svg>
-    </label>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
 
-    <nav
-      class="absolute inset-x-0 top-20 hidden border-b border-line bg-surface shadow-sm peer-checked:block lg:!hidden"
-      aria-label="Main"
-    >
-      <ul class="container-page flex flex-col py-3">
+  <div id="mobile-navigation" class="mobile-navigation" aria-hidden="true" data-mobile-navigation>
+    <nav class="container-page" aria-label="Mobile navigation">
+      <p>Explore the lab</p>
+      <ul>
         {
-          nav.map((item) => (
-            <li>
+          nav.map((item, index) => (
+            <li style={`--menu-index:${index}`}>
               <a
                 href={item.href}
+                class:list={{ active: isActive(item.href) }}
                 aria-current={isActive(item.href) ? 'page' : undefined}
-                class:list={[
-                  'block border-l-2 py-2.5 pl-3 text-[0.95rem] font-medium transition-colors',
-                  isActive(item.href)
-                    ? 'border-illini-orange text-illini-blue'
-                    : 'border-transparent text-ink-muted hover:text-illini-blue',
-                ]}
               >
                 {item.label}
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
               </a>
             </li>
           ))
         }
       </ul>
+      <div class="mobile-contact">
+        <span>VMBSB · Room 3636 · Urbana, Illinois</span>
+        <a href="mailto:hgritton@illinois.edu">hgritton@illinois.edu</a>
+      </div>
     </nav>
   </div>
 </header>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-menu-button]');
+  const menu = document.querySelector<HTMLElement>('[data-mobile-navigation]');
+
+  const setMenu = (open: boolean) => {
+    if (!button || !menu) return;
+    button.setAttribute('aria-expanded', String(open));
+    button.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+    menu.setAttribute('aria-hidden', String(!open));
+    document.documentElement.classList.toggle('menu-open', open);
+  };
+
+  button?.addEventListener('click', () => {
+    setMenu(button.getAttribute('aria-expanded') !== 'true');
+  });
+
+  menu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setMenu(false);
+  });
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1080) setMenu(false);
+  });
+
+</script>
+
+<style>
+  /*
+   * The header keeps its hairline: it is sticky, so without one the nav would
+   * float over identically-coloured page content with no edge at all. This is
+   * the only horizontal rule the page shell draws.
+   */
+  .site-header {
+    position: sticky;
+    z-index: 80;
+    top: 0;
+    height: var(--header-height);
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-bright);
+  }
+
+  .header-inner {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .brand-lockup {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: clamp(0.55rem, 1.1vw, 0.85rem);
+  }
+
+  /*
+   * The Block I is a licensed institutional mark. It always uses the official
+   * Illinois Blue and Illinois Orange — never the site palette tokens — so it
+   * stays correct no matter how a page retints itself.
+   */
+  .illinois-mark {
+    display: grid;
+    width: 2.75rem;
+    height: 3.2rem;
+    flex: none;
+    place-items: center;
+    background: #13294b;
+  }
+
+  .illinois-mark svg {
+    width: 1.38rem;
+    height: auto;
+  }
+
+  .illinois-mark__outline { fill: #ffffff; }
+  .illinois-mark__fill { fill: #e84a27; }
+
+  .brand-home {
+    display: inline-flex;
+    min-width: 0;
+  }
+
+  .brand-home img {
+    width: clamp(8.4rem, 12vw, 10.8rem);
+    height: auto;
+  }
+
+  .brand-institution {
+    display: none;
+    max-width: none;
+    margin-left: clamp(0.15rem, 0.5vw, 0.45rem);
+    padding-left: clamp(0.7rem, 1vw, 1rem);
+    border-left: 1px solid var(--line-strong);
+    color: var(--color-ink-muted);
+    font-family: var(--font-sans);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .desktop-navigation {
+    display: none;
+  }
+
+  .desktop-navigation ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 1.85vw, 2rem);
+  }
+
+  .desktop-navigation a {
+    position: relative;
+    display: block;
+    padding-block: 0.85rem;
+    color: var(--color-ink-soft);
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    transition: color 160ms ease;
+  }
+
+  .desktop-navigation a:hover,
+  .desktop-navigation a.active {
+    color: var(--signal-dark);
+  }
+
+  .menu-button {
+    position: relative;
+    z-index: 3;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: none;
+    border: 1px solid var(--ink);
+    background: var(--paper-bright);
+    color: var(--ink);
+  }
+
+  .menu-button span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.15rem;
+    height: 1px;
+    background: currentColor;
+    transition: transform 220ms var(--ease-spring);
+  }
+
+  .menu-button span:first-child { transform: translate(-50%, -4px); }
+  .menu-button span:last-child { transform: translate(-50%, 4px); }
+  .menu-button[aria-expanded='true'] span:first-child { transform: translate(-50%, 0) rotate(45deg); }
+  .menu-button[aria-expanded='true'] span:last-child { transform: translate(-50%, 0) rotate(-45deg); }
+
+  .mobile-navigation {
+    position: absolute;
+    z-index: -1;
+    top: 100%;
+    right: 0;
+    left: 0;
+    height: calc(100svh - var(--header-height));
+    visibility: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--paper-bright);
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+  }
+
+  .mobile-navigation[aria-hidden='false'] {
+    z-index: 1;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-navigation nav {
+    padding-block: 2.5rem 4rem;
+  }
+
+  .mobile-navigation nav > p {
+    margin-bottom: 1rem;
+    color: var(--color-ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .mobile-navigation li {
+    border-top: 1px solid var(--line);
+    opacity: 1;
+    transform: none;
+  }
+
+  .mobile-navigation li:last-child { border-bottom: 1px solid var(--line); }
+
+  .mobile-navigation li a {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.7rem;
+    padding-block: 0.72rem;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 6vw, 1.75rem);
+    line-height: 1.2;
+  }
+
+  .mobile-navigation li a svg { transition: transform 180ms ease; }
+  .mobile-navigation li a:hover svg { transform: translateX(0.3rem); }
+
+  .mobile-contact {
+    display: flex;
+    margin-top: 2rem;
+    flex-direction: column;
+    gap: 0.4rem;
+    color: var(--color-ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .mobile-contact a { color: var(--ink); text-decoration: underline; text-underline-offset: 0.25rem; }
+
+  :global(html.menu-open) { overflow: hidden; }
+
+  @media (min-width: 700px) {
+    .brand-institution { display: block; }
+  }
+
+  @media (min-width: 1080px) {
+    .desktop-navigation { display: block; }
+    .menu-button { display: none; }
+  }
+
+  @media (min-width: 1280px) {
+    .desktop-navigation ul { gap: clamp(1.3rem, 2vw, 2.25rem); }
+    .desktop-navigation a { font-size: 0.94rem; }
+  }
+</style>

@@ -10,18 +10,44 @@ const show = a.enabled && a.text.trim().length > 0;
 
 {
   show && (
-    <div class="bg-illini-blue text-white">
-      <div class="container-page flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2.5 text-center text-sm">
+    <div class="announcement">
+      <div class="container-page announcement__inner">
         <p>{a.text}</p>
         {a.linkUrl && a.linkLabel && (
-          <a
-            href={a.linkUrl}
-            class="font-semibold text-white underline decoration-illini-orange decoration-2 underline-offset-4 hover:text-illini-orange"
-          >
-            {a.linkLabel}
-          </a>
+          <a href={a.linkUrl}>{a.linkLabel}</a>
         )}
       </div>
     </div>
   )
 }
+
+<style>
+  /*
+   * Styled from the design tokens rather than Tailwind colour utilities, so
+   * the bar cannot silently lose its colours when the palette is edited.
+   */
+  .announcement {
+    background: var(--ink-deep);
+    color: #fff;
+  }
+
+  .announcement__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem 0.75rem;
+    padding-block: 0.65rem;
+    text-align: center;
+    font-size: 0.88rem;
+  }
+
+  .announcement a {
+    color: var(--sky);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .announcement a:hover { color: #fff; }
+</style>

@@ -2,7 +2,9 @@
 import type { GetStaticPaths } from 'astro';
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Card from '../../components/Card.astro';
+import CtaBand from '../../components/CtaBand.astro';
 import VideoEmbed from '../../components/VideoEmbed.astro';
 
 export const getStaticPaths = (async () => {
@@ -20,54 +22,131 @@ interface Props {
 const { post } = Astro.props;
 const { title, date, summary, image, imageAlt, video } = post.data;
 const { Content } = await render(post);
+
+const more = (await getCollection('news', ({ data }) => !data.draft))
+  .filter((item) => item.id !== post.id)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const formatDate = (value: Date) =>
+  value.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+const formatShort = (value: Date) =>
+  value.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 ---
 
 <Base title={title} description={summary}>
-  <article>
-    <header class="border-b border-line bg-surface-sunken">
-      <div class="container-page py-14 sm:py-16">
-        <a
-          href="/news"
-          class="text-sm font-semibold text-illini-blue hover:text-illini-orange-dark"
-        >
-          ← All news
-        </a>
-        <FormattedDate
-          date={date}
-          class="mt-8 block text-xs font-semibold uppercase tracking-wide text-illini-orange-dark"
-        />
-        <h1 class="mt-2 max-w-3xl text-3xl sm:text-4xl">{title}</h1>
-        {
-          summary && (
-            <p class="mt-5 max-w-2xl text-lg leading-relaxed text-ink-muted">
-              {summary}
-            </p>
-          )
-        }
-      </div>
-    </header>
+  <section class="detail-hero">
+    <div class="container-page">
+      <a class="text-link detail-hero__back" href="/news">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6" />
+        </svg>
+        All news
+      </a>
 
-    <div class="container-page py-14">
+      <p class="eyebrow">
+        <time datetime={date.toISOString().slice(0, 10)}>{formatDate(date)}</time>
+      </p>
+      <h1 class="detail-hero__title">{title}</h1>
+      {summary && <p class="lede detail-hero__summary">{summary}</p>}
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="container-page container-page--narrow">
       {
-        image && (
-          <figure class="mb-10">
-            <img
-              src={image}
-              alt={imageAlt}
-              class="w-full rounded-lg border border-line bg-surface-sunken"
-            />
-            {imageAlt && (
-              <figcaption class="mt-2 text-xs text-ink-muted">{imageAlt}</figcaption>
-            )}
-          </figure>
+        video ? (
+          <div class="story-media">
+            <VideoEmbed url={video} title={title} />
+          </div>
+        ) : (
+          image && (
+            <figure class="story-media story-figure">
+              <img src={image} alt={imageAlt} />
+              {imageAlt && <figcaption class="meta">{imageAlt}</figcaption>}
+            </figure>
+          )
         )
       }
 
-      {video && <VideoEmbed url={video} title={title} />}
-
-      <div class="prose-lab">
+      <article class="prose-lab">
         <Content />
-      </div>
+      </article>
     </div>
-  </article>
+  </section>
+
+  {
+    more.length > 0 && (
+      <section class="page-section">
+        <div class="container-page">
+          <SectionHeading
+            eyebrow="More news"
+            title="Other stories from the lab."
+            actionHref="/news"
+            actionLabel="All news"
+          />
+
+          <div class="section-body card-grid card-grid--3">
+            {more.map((item) => (
+              <Card
+                href={`/news/${item.id}`}
+                eyebrow={formatShort(item.data.date)}
+                title={item.data.title}
+                summary={item.data.summary}
+                image={item.data.image}
+                imageAlt={item.data.imageAlt}
+                footLabel="Read story"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand
+    eyebrow="The research"
+    title="What the lab is working on."
+    body="The projects and publications behind the news."
+    links={[
+      { label: 'Research projects', href: '/projects', primary: true },
+      { label: 'Publications', href: '/publications' },
+    ]}
+  />
 </Base>
+
+<style>
+  .detail-hero {
+    background: var(--paper-bright);
+  }
+
+  .detail-hero .container-page {
+    padding-block: clamp(1.75rem, 3vw, 2.5rem) clamp(2.75rem, 5.5vw, 4.5rem);
+  }
+
+  .detail-hero__back { margin-bottom: var(--space-lg); }
+  .detail-hero .eyebrow { margin-bottom: 1rem; }
+  .detail-hero__title { max-width: 22ch; margin: 0; }
+  .detail-hero__summary { margin-top: var(--space-md); }
+
+  .story-media { margin-bottom: var(--space-lg); }
+
+  .story-figure {
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    padding: clamp(0.5rem, 1.5vw, 0.9rem);
+  }
+
+  .story-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .story-figure figcaption {
+    margin-top: 0.8rem;
+    border-top: 1px solid var(--line);
+    padding-top: 0.65rem;
+  }
+</style>

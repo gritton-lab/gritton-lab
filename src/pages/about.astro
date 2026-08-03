@@ -1,0 +1,136 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import CtaBand from '../components/CtaBand.astro';
+import StatementBand from '../components/StatementBand.astro';
+import FigureBand from '../components/FigureBand.astro';
+import home from '../data/home.json';
+
+const team = await getCollection('team');
+const projects = await getCollection('projects');
+const publications = await getCollection('publications');
+
+const approaches = [
+  {
+    title: 'Measure',
+    body: 'Record neural activity at cellular and circuit scale with in vivo imaging, fiber photometry, MRI, and high-density electrophysiology.',
+  },
+  {
+    title: 'Intervene',
+    body: 'Use cell-type-specific optogenetics and carefully designed behavioral tasks to test when a circuit changes perception, movement, or memory.',
+  },
+  {
+    title: 'Model',
+    body: 'Apply signal analysis and machine learning to identify the timing, features, and population codes that make complex neural data interpretable.',
+  },
+];
+---
+
+<Base
+  title="About"
+  description="How the Gritton Lab works: the methods, the standing research interests, and the people behind them."
+>
+  <PageHero
+    eyebrow="About"
+    title="Inside the Gritton Lab."
+    lede="Neuroscientists, bioengineers, and computational researchers in the Department of Comparative Biosciences at the University of Illinois Urbana-Champaign, working the same problem from different directions."
+    stats={[
+      { label: 'Lab members', value: String(team.length) },
+      { label: 'Active projects', value: String(projects.length) },
+      { label: 'Publications', value: String(publications.length) },
+    ]}
+  />
+
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="How we work"
+        title="Measure. Intervene. Model."
+        intro="Every project in the lab moves through the same three stages. The techniques change with the question; the sequence does not."
+      />
+
+      <ol class="section-body ruled-list">
+        {
+          approaches.map((approach, index) => (
+            <li class="ruled-row ruled-row--indexed">
+              <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
+              <div class="ruled-row__body">
+                <h3 class="ruled-row__title">{approach.title}</h3>
+                <p class="ruled-row__note">{approach.body}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <StatementBand
+    eyebrow="Why it matters"
+    statement="Disruption in these systems is where neuropsychiatric illness begins."
+    stats={[
+      { label: 'Neuromodulators studied', value: 'ACh · DA · NE' },
+      { label: 'Disease context', value: "Autism · Parkinson's · Alzheimer's" },
+      { label: 'Scale', value: 'Single cells to whole brain' },
+    ]}
+  />
+
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Our premise"
+        title="Coordination is the question."
+        actionHref="/projects"
+        actionLabel="See the active projects"
+      />
+
+      <div class="section-body">
+        <p class="lede">{home.intro}</p>
+      </div>
+    </div>
+  </section>
+
+
+  <FigureBand
+    image="/images/uploads/bioe-symposium.jpeg"
+    alt="Gritton Lab researchers at the Bioengineering Graduate Research Symposium"
+    label="Bioengineering Graduate Research Symposium"
+    caption="The lab presents together — every project is owned end to end by the researcher running it."
+    focus="56% center"
+  />
+
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Standing interests"
+        title="What we keep returning to."
+        intro="Themes that cut across every project in the lab, whatever the technique or model system."
+      />
+
+      <ol class="section-body ruled-list">
+        {
+          home.researchInterests.map((interest, index) => (
+            <li class="ruled-row ruled-row--indexed">
+              <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
+              <div class="ruled-row__body">
+                <h3 class="ruled-row__title">{interest}</h3>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="The lab"
+    title="A small group, deliberately."
+    body="Projects are run by researchers who own them end to end, from surgery and recording through analysis and writing."
+    links={[
+      { label: 'Meet the team', href: '/people', primary: true },
+      { label: 'Open positions', href: '/lab-positions' },
+    ]}
+  />
+</Base>

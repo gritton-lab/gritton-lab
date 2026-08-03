@@ -1,0 +1,266 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Card from '../../components/Card.astro';
+import CtaBand from '../../components/CtaBand.astro';
+
+type ProjectFrame = { label: string; value: string };
+
+/*
+ * Framing metadata per project. Every project renders the same three-row
+ * table, so the sidebar is identical in shape from one project to the next.
+ */
+const projectFrames: Record<string, ProjectFrame[]> = {
+  'oscillations-in-circuit-function': [
+    { label: 'Research focus', value: 'Neural rhythms and circuit coupling' },
+    { label: 'Scale', value: 'Local neurons to distributed brain regions' },
+    { label: 'Disease context', value: "Autism and Parkinson's disease" },
+  ],
+  'perceptual-encoding-in-complex-auditory-scenes': [
+    { label: 'Research focus', value: 'Auditory attention and spatial encoding' },
+    { label: 'Experimental methods', value: 'In vivo imaging, electrophysiology, optogenetics' },
+    { label: 'Analysis', value: 'Machine learning for spatial sound responses' },
+  ],
+  'sensory-processing-in-animal-models-of-autism': [
+    { label: 'Research focus', value: 'Sensory encoding in complex environments' },
+    { label: 'Model', value: 'Fmr1-knockout mouse model of Fragile X Syndrome' },
+    { label: 'Experimental methods', value: 'Calcium imaging, fiber photometry, optogenetics' },
+  ],
+  'homeostatic-regulation-of-neural-circuits': [
+    { label: 'Research focus', value: 'Excitation and inhibition balance' },
+    { label: 'Experimental methods', value: 'High-density recordings, imaging, virtual reality' },
+    { label: 'Context', value: "Aging, autism, and Parkinson's disease models" },
+  ],
+  'environmental-risk-factors': [
+    { label: 'Research focus', value: 'Early-life endocrine-disrupting chemical exposure' },
+    { label: 'Experimental methods', value: 'Functional and structural MRI, multiregional signaling' },
+    { label: 'Disorder context', value: "Alzheimer's disease and autism spectrum disorder" },
+  ],
+};
+
+export const getStaticPaths = (async () => {
+  const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+
+  return projects.map((project, index) => ({
+    params: { slug: project.id },
+    props: {
+      project,
+      projectNumber: index + 1,
+      projectCount: projects.length,
+      // Wrap around so the "other projects" row always has three cards.
+      others: [...projects.slice(index + 1), ...projects.slice(0, index)].slice(0, 3),
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  projectNumber: number;
+  projectCount: number;
+  others: CollectionEntry<'projects'>[];
+}
+
+const { project, projectNumber, projectCount, others } = Astro.props;
+const { Content } = await render(project);
+const d = project.data;
+const frames = projectFrames[project.id] ?? [];
+---
+
+<Base title={d.title} description={d.summary}>
+  <section class="detail-hero">
+    <div class="container-page">
+      <a class="text-link detail-hero__back" href="/projects">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6" />
+        </svg>
+        All projects
+      </a>
+
+      <p class="eyebrow">
+        Research project {String(projectNumber).padStart(2, '0')} / {String(projectCount).padStart(2, '0')}
+      </p>
+      <h1 class="detail-hero__title">{d.title}</h1>
+      {d.summary && <p class="lede detail-hero__summary">{d.summary}</p>}
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="container-page">
+      <div class="project-grid">
+        <div class="project-main">
+          {
+            d.image && (
+              <figure class="project-figure">
+                <img src={d.image} alt={d.imageAlt} />
+                {d.imageAlt && <figcaption class="meta">{d.imageAlt}</figcaption>}
+              </figure>
+            )
+          }
+
+          <div class="prose-lab project-prose">
+            <Content />
+          </div>
+        </div>
+
+        <aside class="project-aside">
+          {
+            frames.length > 0 && (
+              <div class="project-card">
+                <p class="meta">At a glance</p>
+                <dl class="project-dl">
+                  {frames.map((frame) => (
+                    <div>
+                      <dt>{frame.label}</dt>
+                      <dd>{frame.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )
+          }
+
+          <div class="project-card">
+            <p class="meta">Related</p>
+            <ul class="project-links">
+              <li><a class="link-underline" href="/publications">Publications from this work</a></li>
+              <li><a class="link-underline" href="/people">The researchers involved</a></li>
+              <li><a class="link-underline" href="/lab-positions">Join this project</a></li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {
+    others.length > 0 && (
+      <section class="page-section">
+        <div class="container-page">
+          <SectionHeading
+            eyebrow="Keep reading"
+            title="Other projects in the lab."
+            actionHref="/projects"
+            actionLabel="All projects"
+          />
+
+          <div class="section-body card-grid card-grid--3">
+            {others.map((other) => (
+              <Card
+                href={`/projects/${other.id}`}
+                eyebrow="Research project"
+                title={other.data.title}
+                summary={other.data.summary}
+                image={other.data.image}
+                imageAlt={other.data.imageAlt}
+                media="figure"
+                footLabel="View project"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand
+    eyebrow="Work with us"
+    title="Interested in this line of research?"
+    body="We are recruiting postdocs, graduate students, technicians, and undergraduates across every project."
+    links={[
+      { label: 'Open positions', href: '/lab-positions', primary: true },
+      { label: 'Contact the lab', href: '/contact' },
+    ]}
+  />
+</Base>
+
+<style>
+  .detail-hero {
+    background: var(--paper-bright);
+  }
+
+  .detail-hero .container-page {
+    padding-block: clamp(1.75rem, 3vw, 2.5rem) clamp(2.75rem, 5.5vw, 4.5rem);
+  }
+
+  .detail-hero__back { margin-bottom: var(--space-lg); }
+  .detail-hero .eyebrow { margin-bottom: 1rem; }
+  .detail-hero__title { max-width: 20ch; margin: 0; }
+  .detail-hero__summary { margin-top: var(--space-md); }
+
+  .project-grid {
+    display: grid;
+    gap: var(--space-block);
+    align-items: start;
+  }
+
+  .project-figure {
+    margin-bottom: var(--space-lg);
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  .project-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .project-figure figcaption {
+    margin-top: 0.85rem;
+    border-top: 1px solid var(--line);
+    padding-top: 0.7rem;
+  }
+
+  .project-prose { max-width: 66ch; }
+
+  .project-aside {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .project-card {
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    padding: var(--space-md);
+  }
+
+  .project-card .meta { margin-bottom: 0.85rem; }
+
+  .project-dl { display: grid; }
+
+  .project-dl > div {
+    display: grid;
+    gap: 0.2rem;
+    border-top: 1px solid var(--line);
+    padding-block: 0.7rem;
+  }
+
+  .project-dl > div:first-child { border-top: 0; padding-top: 0; }
+
+  .project-dl dt {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .project-dl dd {
+    color: var(--ink);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .project-links {
+    display: grid;
+    gap: 0.5rem;
+    font-size: 0.92rem;
+  }
+
+  @media (min-width: 900px) {
+    .project-grid { grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem); }
+  }
+</style>

@@ -1,0 +1,111 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/PageHero.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Card from '../../components/Card.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import FigureBand from '../../components/FigureBand.astro';
+import home from '../../data/home.json';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+
+/*
+ * Methods are listed per project so every card carries the same three pieces
+ * of information — title, summary, methods — instead of some cards running to
+ * twice the height of their neighbours.
+ */
+const methodsBySlug: Record<string, string[]> = {
+  'oscillations-in-circuit-function': ['Cell-type recording', 'Spectral analysis', 'Disease models'],
+  'perceptual-encoding-in-complex-auditory-scenes': ['Electrophysiology', 'Optogenetics', 'Machine learning'],
+  'sensory-processing-in-animal-models-of-autism': ['Calcium imaging', 'Fiber photometry', 'Behavior'],
+  'homeostatic-regulation-of-neural-circuits': ['High-density recording', 'Virtual reality', 'Imaging'],
+  'environmental-risk-factors': ['Structural MRI', 'Functional MRI', 'Network signaling'],
+};
+---
+
+<Base
+  title="Research projects"
+  description="Active research on neural rhythms, auditory attention, autism models, circuit homeostasis, and environmental risk."
+>
+  <PageHero
+    eyebrow="Research"
+    title="From signal to decision."
+    lede="Each decision we make depends on the coordinated actions of thousands of nerve cells from diverse brain regions working in unison at brief moments in time. These are the questions the lab is working on now."
+    stats={[
+      { label: 'Active projects', value: String(projects.length) },
+      { label: 'Core methods', value: 'Imaging · Ephys · MRI' },
+      { label: 'Department', value: 'Comparative Biosciences' },
+    ]}
+  />
+
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="All projects"
+        title="What the lab is working on."
+        intro="Every project page carries the full overview, the primary figures, and the methods behind them."
+      />
+
+      <div class="section-body card-grid card-grid--3">
+        {
+          projects.map((project) => (
+            <Card
+              href={`/projects/${project.id}`}
+              eyebrow="Research project"
+              title={project.data.title}
+              summary={project.data.summary}
+              image={project.data.image}
+              imageAlt={project.data.imageAlt}
+              media="figure"
+              tags={methodsBySlug[project.id] ?? []}
+              footLabel="View project"
+            />
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+
+  <FigureBand
+    image="/images/uploads/oliver-ear-day-2024.jpg"
+    alt="Oliver presenting auditory scene analysis research at Ear Day 2024"
+    label="Ear Day 2024"
+    caption="Auditory scene analysis: how the cortex separates a target voice from competing sound."
+    focus="70% center"
+  />
+
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Standing interests"
+        title="What we keep returning to."
+        intro="Themes that cut across every project in the lab, whatever the technique or model system."
+      />
+
+      <ol class="section-body ruled-list">
+        {
+          home.researchInterests.map((interest, index) => (
+            <li class="ruled-row ruled-row--indexed">
+              <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
+              <div class="ruled-row__body">
+                <h3 class="ruled-row__title">{interest}</h3>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <CtaBand
+    eyebrow="Research in context"
+    title="See where these questions are published."
+    body="Peer-reviewed work on neural circuits, neuromodulation, and the tools that make these questions visible."
+    links={[
+      { label: 'Browse publications', href: '/publications', primary: true },
+      { label: 'Meet the lab', href: '/people' },
+    ]}
+  />
+</Base>

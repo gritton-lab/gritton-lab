@@ -1,121 +1,241 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import PageHeader from '../components/PageHeader.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import CtaBand from '../components/CtaBand.astro';
+import FigureBand from '../components/FigureBand.astro';
 import settings from '../data/settings.json';
 
-const pubs = (await getCollection('publications')).sort((a, b) => {
-  if (b.data.year !== a.data.year) return b.data.year - a.data.year;
-  return a.data.order - b.data.order;
-});
+const publications = (await getCollection('publications')).sort(
+  (a, b) => b.data.year - a.data.year || a.data.order - b.data.order,
+);
 
-// Group into years, newest first.
-const years = [...new Set(pubs.map((p) => p.data.year))].sort((a, b) => b - a);
-const byYear = years.map((year) => ({
+/*
+ * The whole archive is rendered as one continuous list grouped by year, rather
+ * than hidden behind year tabs. A bibliography is something you scan and
+ * search in the browser; paging it into eight separate panels only made three
+ * papers visible at a time.
+ */
+const years = [...new Set(publications.map((publication) => publication.data.year))].sort((a, b) => b - a);
+
+const groups = years.map((year) => ({
   year,
-  items: pubs.filter((p) => p.data.year === year),
+  items: publications.filter((publication) => publication.data.year === year),
 }));
 
-// Author names to highlight in each citation.
-const LAB_AUTHORS = /\b(Gritton\s+HJ?|Qu\s+Z)\b/g;
-
-/** Split a citation's author string so lab members can be bolded. */
-function highlightAuthors(authors: string) {
-  const parts: { text: string; lab: boolean }[] = [];
-  let last = 0;
-  for (const m of authors.matchAll(LAB_AUTHORS)) {
-    if (m.index! > last) {
-      parts.push({ text: authors.slice(last, m.index), lab: false });
-    }
-    parts.push({ text: m[0], lab: true });
-    last = m.index! + m[0].length;
-  }
-  if (last < authors.length) parts.push({ text: authors.slice(last), lab: false });
-  return parts;
-}
+const span = years.length ? `${years.at(-1)}–${years[0]}` : '—';
 ---
 
 <Base
   title="Publications"
-  description="Peer-reviewed publications from the Gritton Lab."
+  description="Peer-reviewed research from the Gritton Lab on neural circuits, neuromodulation, and sensory encoding."
 >
-  <PageHeader
-    title="Publications"
-    intro="Selected peer-reviewed work from the lab. Every entry links to the published article."
-  />
+  <PageHero
+    eyebrow="Publications"
+    title="Evidence, indexed."
+    lede="Peer-reviewed research on neural circuits, neuromodulation, sensory encoding, and the tools that make those questions visible."
+    stats={[
+      { label: 'Papers indexed', value: String(publications.length) },
+      { label: 'Years represented', value: String(years.length) },
+      { label: 'Archive span', value: span },
+    ]}
+  >
+    <a class="button" href={settings.social.pubmed} target="_blank" rel="noopener noreferrer">
+      PubMed bibliography
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M7 17 17 7M8 7h9v9" />
+      </svg>
+    </a>
+    <a class="button" href={settings.social.googleScholar} target="_blank" rel="noopener noreferrer">
+      Google Scholar
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M7 17 17 7M8 7h9v9" />
+      </svg>
+    </a>
+  </PageHero>
 
-  <div class="container-page py-16">
-    <div class="flex flex-wrap gap-3">
-      <a
-        href={settings.social.pubmed}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="rounded-md border border-line bg-surface px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
-      >
-        Full list on PubMed
-      </a>
-      <a
-        href={settings.social.googleScholar}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="rounded-md border border-line bg-surface px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
-      >
-        Google Scholar profile
-      </a>
-    </div>
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Browse the record"
+        title="The full archive, year by year."
+        intro="Filter by keyword to search titles, authors, and journals, or jump straight to a year."
+      />
 
-    <div class="mt-14 space-y-14">
-      {
-        byYear.map(({ year, items }) => (
-          <section>
-            <div class="flex items-center gap-4">
-              <h2 class="text-xl tabular-nums">{year}</h2>
-              <span aria-hidden="true" class="h-px flex-1 bg-line" />
-              <span class="text-xs font-medium uppercase tracking-wide text-ink-muted">
-                {items.length} {items.length === 1 ? 'paper' : 'papers'}
-              </span>
-            </div>
+      <div class="section-body pubs" data-pubs>
+        <div class="pubs__controls">
+          <label class="pubs__search">
+            <span class="sr-only">Search publications</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+            </svg>
+            <input type="search" placeholder="Author, title, journal, or keyword" data-pubs-search />
+          </label>
 
-            <ol class="mt-6 space-y-6">
-              {items.map((pub) => (
-                <li class="border-l-2 border-line pl-5 transition-colors hover:border-illini-orange">
-                  <p class="text-sm leading-relaxed text-ink-muted">
-                    {highlightAuthors(pub.data.authors).map((part) =>
-                      part.lab ? (
-                        <strong class="font-semibold text-ink">{part.text}</strong>
-                      ) : (
-                        part.text
-                      ),
-                    )}
-                  </p>
+          <p class="meta pubs__count" data-pubs-count aria-live="polite">
+            {publications.length} publications
+          </p>
+        </div>
 
-                  <h3 class="mt-1.5 text-base font-medium leading-snug">
-                    {pub.data.url ? (
+        <nav class="chip-row pubs__years" aria-label="Jump to year">
+          {years.map((year) => <a class="chip" href={`#year-${year}`}>{year}</a>)}
+        </nav>
+
+        {
+          groups.map((group) => (
+            <section class="pubs__group" id={`year-${group.year}`} data-pubs-group>
+              <h3 class="pubs__year">
+                {group.year}
+                <span class="meta">{group.items.length} {group.items.length === 1 ? 'paper' : 'papers'}</span>
+              </h3>
+
+              <ol class="ruled-list">
+                {group.items.map((publication, index) => (
+                  <li
+                    class="ruled-row ruled-row--indexed"
+                    data-pubs-item
+                    data-search={`${publication.data.authors} ${publication.data.title} ${publication.data.journal} ${publication.data.year}`.toLowerCase()}
+                  >
+                    <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
+                    <div class="ruled-row__body">
+                      <p class="note">{publication.data.authors}</p>
+                      <h4 class="ruled-row__title">{publication.data.title}</h4>
+                      <p class="ruled-row__meta">{publication.data.journal}</p>
+                      {publication.data.note && <p class="note">{publication.data.note}</p>}
+                    </div>
+                    {publication.data.url && (
                       <a
-                        href={pub.data.url}
+                        class="text-link ruled-row__action"
+                        href={publication.data.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="underline decoration-illini-orange decoration-2 underline-offset-4 hover:text-illini-orange-dark"
                       >
-                        {pub.data.title}
+                        Open DOI
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path d="M7 17 17 7M8 7h9v9" />
+                        </svg>
                       </a>
-                    ) : (
-                      pub.data.title
                     )}
-                  </h3>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
 
-                  <p class="mt-1.5 text-sm italic text-ink-muted">
-                    {pub.data.journal}
-                    {pub.data.note && (
-                      <span class="not-italic"> · {pub.data.note}</span>
-                    )}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ))
-      }
+        <p class="pubs__empty" data-pubs-empty hidden>No publications match that search.</p>
+      </div>
     </div>
-  </div>
+  </section>
+
+
+  <FigureBand
+    image="/images/uploads/eric-isur-2024.jpg"
+    alt="Undergraduate researchers presenting posters at the 2024 ISUR and URS expos"
+    label="Undergraduate research expo"
+    caption="Work from the lab, presented by the students who ran it."
+  />
+
+  <CtaBand
+    eyebrow="Behind the papers"
+    title="The projects these results came from."
+    body="Every publication traces back to an active line of work in the lab."
+    links={[
+      { label: 'Research projects', href: '/projects', primary: true },
+      { label: 'Meet the authors', href: '/people' },
+    ]}
+  />
 </Base>
+
+<script>
+  // Client-side filtering over the already-rendered list: the full archive is
+  // in the HTML, so the page still works with JavaScript disabled.
+  const root = document.querySelector<HTMLElement>('[data-pubs]');
+  if (root) {
+    const input = root.querySelector<HTMLInputElement>('[data-pubs-search]');
+    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-pubs-item]'));
+    const groups = Array.from(root.querySelectorAll<HTMLElement>('[data-pubs-group]'));
+    const count = root.querySelector<HTMLElement>('[data-pubs-count]');
+    const empty = root.querySelector<HTMLElement>('[data-pubs-empty]');
+
+    input?.addEventListener('input', () => {
+      const query = input.value.trim().toLowerCase();
+      let visible = 0;
+
+      items.forEach((item) => {
+        const match = !query || (item.dataset.search ?? '').includes(query);
+        item.hidden = !match;
+        if (match) visible += 1;
+      });
+
+      // Hide a year heading once every paper under it has been filtered out.
+      groups.forEach((group) => {
+        const anyVisible = Array.from(group.querySelectorAll<HTMLElement>('[data-pubs-item]')).some(
+          (item) => !item.hidden,
+        );
+        group.hidden = !anyVisible;
+      });
+
+      if (count) count.textContent = `${visible} ${visible === 1 ? 'publication' : 'publications'}`;
+      if (empty) empty.hidden = visible !== 0;
+    });
+  }
+</script>
+
+<style>
+  .pubs__controls {
+    display: grid;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .pubs__search {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    padding: 0 0.9rem;
+    color: var(--ink-muted);
+  }
+
+  .pubs__search input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding-block: 0.85rem;
+    color: var(--ink);
+    outline: none;
+  }
+
+  .pubs__search:focus-within { border-color: var(--signal); }
+
+  .pubs__years { margin-bottom: var(--space-block); }
+  .pubs__years .chip { text-decoration: none; }
+
+  .pubs__group + .pubs__group { margin-top: var(--space-block); }
+
+  .pubs__year {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .pubs__empty {
+    padding-block: var(--space-lg);
+    color: var(--ink-muted);
+  }
+
+  @media (min-width: 700px) {
+    .pubs__controls {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+  }
+</style>

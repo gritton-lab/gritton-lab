@@ -1,0 +1,205 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/PageHero.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Card from '../../components/Card.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import FigureBand from '../../components/FigureBand.astro';
+
+const team = (await getCollection('team')).sort(
+  (a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name),
+);
+
+/*
+ * One section per group, always in this order, always rendered with the same
+ * card. Empty groups drop out so a heading is never left standing over
+ * nothing.
+ */
+/*
+ * The PI is rendered as a featured block rather than a card. A single card in
+ * a four-column grid left three quarters of the row empty, which read as a
+ * layout bug rather than a deliberate emphasis.
+ */
+const pi = team.find((person) => person.data.group === 'pi');
+
+const groups = [
+  {
+    key: 'grad',
+    eyebrow: 'Graduate research',
+    title: 'Graduate students',
+    intro: 'Researchers combining experiment, computation, and engineering to interrogate neural circuits.',
+  },
+  {
+    key: 'undergrad',
+    eyebrow: 'Undergraduate research',
+    title: 'Undergraduate researchers',
+    intro: 'Students running experiments and analysis alongside the graduate team.',
+  },
+  {
+    key: 'staff',
+    eyebrow: 'Research staff',
+    title: 'Staff',
+    intro: 'The technical and operational work that keeps every project running.',
+  },
+  {
+    key: 'alumni',
+    eyebrow: 'Lab alumni',
+    title: 'Alumni',
+    intro: 'Former researchers whose ideas and work remain part of the Gritton Lab record.',
+  },
+]
+  .map((group) => ({ ...group, people: team.filter((person) => person.data.group === group.key) }))
+  .filter((group) => group.people.length > 0);
+---
+
+<Base
+  title="People"
+  description="The neuroscientists, bioengineers, and computational researchers of the Gritton Lab."
+>
+  <PageHero
+    eyebrow="People"
+    title="The people behind the work."
+    lede="We are neuroscientists, bioengineers, and computational researchers working together to understand how neural activity becomes attention, learning, and behavior."
+    stats={[
+      { label: 'Lab members', value: String(team.length) },
+      { label: 'Institution', value: 'Illinois Urbana-Champaign' },
+      { label: 'Currently recruiting', value: 'Yes' },
+    ]}
+  />
+
+  {
+    pi && (
+      <section class="page-section">
+        <div class="container-page">
+          <SectionHeading
+            eyebrow="Leadership"
+            title="Principal investigator"
+            intro="Setting the questions, building the collaborations, and connecting signals across scales."
+          />
+
+          <div class="section-body pi">
+            <div class="pi__media">
+              {pi.data.photo ? (
+                <img src={pi.data.photo} alt={pi.data.name} width="600" height="750" />
+              ) : (
+                <div class="pi__placeholder" aria-hidden="true" />
+              )}
+            </div>
+
+            <div class="pi__body">
+              <p class="card__eyebrow">{pi.data.role}</p>
+              <h3 class="pi__name">{pi.data.name}</h3>
+              {pi.data.program && <p class="pi__program">{pi.data.program}</p>}
+              {pi.body && <p class="lede pi__bio">{pi.body.trim()}</p>}
+
+              <div class="actions pi__actions">
+                <a class="button button--primary" href={`/people/${pi.id}`}>
+                  Full profile
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </a>
+                {pi.data.email && (
+                  <a class="button" href={`mailto:${pi.data.email}`}>
+                    {pi.data.email}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    groups.map((group) => (
+      <section class="page-section">
+        <div class="container-page">
+          <SectionHeading eyebrow={group.eyebrow} title={group.title} intro={group.intro} />
+
+          <div class="section-body card-grid card-grid--4">
+            {group.people.map((person) => (
+              <Card
+                href={`/people/${person.id}`}
+                eyebrow={person.data.role}
+                title={person.data.name}
+                summary={person.data.program}
+                image={person.data.photo}
+                imageAlt={person.data.name}
+                media="portrait"
+                footLabel="View profile"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    ))
+  }
+
+  <FigureBand
+    image="/images/uploads/eric-isur-2024.jpg"
+    alt="Undergraduate researchers presenting posters at the 2024 ISUR and URS expos"
+    label="Undergraduate research expo"
+    caption="Students present the work they ran, under their own names."
+  />
+
+  <CtaBand
+    eyebrow="Join the network"
+    title="Bring a new signal into the lab."
+    body="We welcome curious researchers who want to connect precise experiments with consequential questions about the brain and behavior."
+    links={[
+      { label: 'Explore lab positions', href: '/lab-positions', primary: true },
+      { label: 'Contact the lab', href: '/contact' },
+    ]}
+  />
+</Base>
+
+<style>
+  .pi {
+    display: grid;
+    gap: var(--space-block);
+    align-items: start;
+  }
+
+  .pi__media {
+    max-width: 22rem;
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+  }
+
+  .pi__media img,
+  .pi__placeholder {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .pi__placeholder {
+    background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
+  }
+
+  .pi__name {
+    margin-top: 0.5rem;
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+  }
+
+  .pi__program {
+    margin-top: 0.4rem;
+    color: var(--signal-dark);
+    font-size: 0.98rem;
+    font-weight: 600;
+  }
+
+  .pi__bio { margin-top: var(--space-md); }
+  .pi__actions { margin-top: var(--space-lg); }
+
+  @media (min-width: 800px) {
+    .pi { grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr); }
+    .pi__media { max-width: none; }
+  }
+</style>

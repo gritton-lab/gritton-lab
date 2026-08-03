@@ -1,0 +1,485 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Card from '../../components/Card.astro';
+import CtaBand from '../../components/CtaBand.astro';
+
+type PersonIdentity = {
+  firstName: string;
+  lastName: string;
+  bylineInitials: Set<string>;
+};
+
+export const getStaticPaths = (async () => {
+  // Keep matching helpers inside getStaticPaths: Astro executes this exported
+  // function in its own prerendering scope.
+  const normalizeNamePart = (value: string) =>
+    value
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z]/gi, '')
+      .toLocaleLowerCase();
+
+  const getPersonIdentity = (person: CollectionEntry<'team'>): PersonIdentity => {
+    const publicName = person.data.name.split(',')[0].trim();
+    const words = publicName
+      .replace(/\./g, '')
+      .split(/\s+/)
+      .map(normalizeNamePart)
+      .filter(Boolean);
+    const firstName = words[0] ?? '';
+    const lastName = words.at(-1) ?? '';
+    const bylineInitials = new Set<string>();
+
+    if (firstName) bylineInitials.add(firstName.charAt(0));
+
+    // Some profiles use a preferred first name while their institutional email
+    // preserves a publication name (for example, zhiliqu -> Qu Z). Only derive
+    // that initial when the full surname is visibly present in the email stem.
+    const emailStem = person.data.email
+      ?.split('@')[0]
+      .replace(/\d+$/g, '')
+      .replace(/[^a-z]/gi, '')
+      .toLocaleLowerCase();
+    if (emailStem && lastName && emailStem.endsWith(lastName)) {
+      const emailGivenName = emailStem.slice(0, -lastName.length);
+      if (emailGivenName) bylineInitials.add(emailGivenName.charAt(0));
+    }
+
+    return { firstName, lastName, bylineInitials };
+  };
+
+  const publicationMatches = (
+    publication: CollectionEntry<'publications'>,
+    identity: PersonIdentity,
+  ) => {
+    if (!identity.lastName) return false;
+
+    return publication.data.authors.split(',').some((rawByline) => {
+      const byline = rawByline.replace(/\*/g, '').trim().split(/\s+/);
+      const surname = normalizeNamePart(byline[0] ?? '');
+      const initial = normalizeNamePart(byline[1] ?? '').charAt(0);
+
+      return surname === identity.lastName && Boolean(initial) && identity.bylineInitials.has(initial);
+    });
+  };
+
+  const normalizedWords = (value: string) =>
+    value
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+
+  const hasWholeNamePart = (text: string, namePart: string) => {
+    if (!namePart) return false;
+    return ` ${normalizedWords(text)} `.includes(` ${namePart} `);
+  };
+
+  const [people, publications, news] = await Promise.all([
+    getCollection('team'),
+    getCollection('publications'),
+    getCollection('news', ({ data }) => !data.draft),
+  ]);
+
+  const identities = new Map(people.map((person) => [person.id, getPersonIdentity(person)]));
+  const firstNameFrequency = people.reduce<Record<string, number>>((counts, person) => {
+    const firstName = identities.get(person.id)?.firstName;
+    if (firstName) counts[firstName] = (counts[firstName] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  return people
+    .sort((a, b) => a.data.order - b.data.order)
+    .map((person) => {
+      const identity = identities.get(person.id)!;
+      const publicationMatchesForPerson = publications
+        .filter((publication) => publicationMatches(publication, identity))
+        .sort((a, b) => {
+          if (b.data.year !== a.data.year) return b.data.year - a.data.year;
+          return a.data.order - b.data.order;
+        });
+
+      const relatedNews = news
+        .filter((post) => {
+          const searchable = [post.data.title, post.data.summary, post.data.imageAlt, post.body]
+            .filter(Boolean)
+            .join(' ');
+          const lastNameMatch = hasWholeNamePart(searchable, identity.lastName);
+          const uniqueFirstNameMatch =
+            (firstNameFrequency[identity.firstName] ?? 0) === 1 &&
+            hasWholeNamePart(searchable, identity.firstName);
+          return lastNameMatch || uniqueFirstNameMatch;
+        })
+        .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+        .slice(0, 3);
+
+      return {
+        params: { slug: person.id },
+        props: {
+          person,
+          relatedPublications: publicationMatchesForPerson.slice(0, 6),
+          relatedPublicationCount: publicationMatchesForPerson.length,
+          relatedNews,
+        },
+      };
+    });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  person: CollectionEntry<'team'>;
+  relatedPublications: CollectionEntry<'publications'>[];
+  relatedPublicationCount: number;
+  relatedNews: CollectionEntry<'news'>[];
+}
+
+const { person, relatedPublications, relatedPublicationCount, relatedNews } = Astro.props;
+const { Content } = await render(person);
+const d = person.data;
+const hasBio = Boolean(person.body?.trim());
+
+const groupLabels: Record<typeof d.group, string> = {
+  pi: 'Lab leadership',
+  grad: 'Graduate researcher',
+  undergrad: 'Undergraduate researcher',
+  staff: 'Lab staff',
+  alumni: 'Lab alumni',
+};
+
+const contactRows = [
+  d.email ? { label: 'Email', value: d.email, href: `mailto:${d.email}` } : null,
+  d.phone ? { label: 'Phone', value: d.phone, href: `tel:${d.phone.replace(/[^\d+]/g, '')}` } : null,
+  d.lab ? { label: 'Lab', value: d.lab } : null,
+  d.office ? { label: 'Office', value: d.office } : null,
+].filter(Boolean) as { label: string; value: string; href?: string }[];
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+---
+
+<Base title={d.name} description={d.program ?? d.role}>
+  {/*
+    The profile masthead follows the same rules as PageHero — eyebrow, title,
+    supporting line, then detail — with the portrait added as a second column.
+    It keeps the same rail, padding, and type sizes as every other page.
+  */}
+  <section class="detail-hero">
+    <div class="container-page">
+      <a class="text-link detail-hero__back" href="/people">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M19 12H5M11 18l-6-6 6-6" />
+        </svg>
+        All people
+      </a>
+
+      <div class="detail-hero__grid">
+        <div class="detail-hero__text">
+          <p class="eyebrow">{groupLabels[d.group]}</p>
+          <h1 class="detail-hero__title">{d.name}</h1>
+          <p class="detail-hero__role">{d.role}</p>
+          {d.program && <p class="lede detail-hero__program">{d.program}</p>}
+
+          {
+            d.links.length > 0 && (
+              <div class="actions detail-hero__links">
+                {d.links.map((link) => (
+                  <a class="button" href={link.url} target="_blank" rel="noopener noreferrer">
+                    {link.label}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M7 17 17 7M8 7h9v9" />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            )
+          }
+        </div>
+
+        <div class="detail-hero__media">
+          {
+            d.photo ? (
+              <img src={d.photo} alt={d.name} width="600" height="750" />
+            ) : (
+              <div class="detail-hero__placeholder" aria-hidden="true">
+                <span>Gritton Lab</span>
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-section">
+    <div class="container-page">
+      <div class="profile-grid">
+        <div class="profile-main">
+          {
+            hasBio && (
+              <>
+                <SectionHeading eyebrow="Profile" title="About" />
+                <div class="section-body prose-lab">
+                  <Content />
+                </div>
+              </>
+            )
+          }
+
+          {
+            relatedPublications.length > 0 && (
+              <div class:list={[hasBio && 'profile-block']}>
+                <SectionHeading
+                  eyebrow="Publications"
+                  title={`Selected work${relatedPublicationCount > relatedPublications.length ? ` (${relatedPublications.length} of ${relatedPublicationCount})` : ''}`}
+                  actionHref="/publications"
+                  actionLabel="Full archive"
+                />
+
+                <ol class="section-body ruled-list">
+                  {relatedPublications.map((publication, index) => (
+                    <li class="ruled-row ruled-row--indexed">
+                      <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
+                      <div class="ruled-row__body">
+                        <p class="note">{publication.data.authors}</p>
+                        <h3 class="ruled-row__title">{publication.data.title}</h3>
+                        <p class="ruled-row__meta">
+                          {publication.data.journal} · {publication.data.year}
+                        </p>
+                      </div>
+                      {publication.data.url && (
+                        <a
+                          class="text-link ruled-row__action"
+                          href={publication.data.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          DOI
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M7 17 17 7M8 7h9v9" />
+                          </svg>
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )
+          }
+        </div>
+
+        <aside class="profile-aside">
+          {
+            contactRows.length > 0 && (
+              <div class="profile-card">
+                <p class="meta">Contact</p>
+                <dl class="profile-dl">
+                  {contactRows.map((row) => (
+                    <div>
+                      <dt>{row.label}</dt>
+                      <dd>
+                        {row.href ? (
+                          <a class="link-underline" href={row.href}>
+                            {row.value}
+                          </a>
+                        ) : (
+                          row.value
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )
+          }
+
+          {
+            d.education.length > 0 && (
+              <div class="profile-card">
+                <p class="meta">Appointments &amp; education</p>
+                <ul class="profile-list">
+                  {d.education.map((entry) => (
+                    <li>{entry}</li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {
+    relatedNews.length > 0 && (
+      <section class="page-section">
+        <div class="container-page">
+          <SectionHeading
+            eyebrow="In the news"
+            title="Mentioned in lab news."
+            actionHref="/news"
+            actionLabel="All news"
+          />
+
+          <div class="section-body card-grid card-grid--3">
+            {relatedNews.map((post) => (
+              <Card
+                href={`/news/${post.id}`}
+                eyebrow={formatDate(post.data.date)}
+                title={post.data.title}
+                summary={post.data.summary}
+                image={post.data.image}
+                imageAlt={post.data.imageAlt}
+                footLabel="Read story"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand
+    eyebrow="The lab"
+    title="See the rest of the team."
+    body="Every member of the lab runs their projects end to end, from recording through analysis and writing."
+    links={[
+      { label: 'All people', href: '/people', primary: true },
+      { label: 'Open positions', href: '/lab-positions' },
+    ]}
+  />
+</Base>
+
+<style>
+  .detail-hero {
+    background: var(--paper-bright);
+  }
+
+  .detail-hero .container-page {
+    padding-block: clamp(1.75rem, 3vw, 2.5rem) clamp(2.75rem, 5.5vw, 4.5rem);
+  }
+
+  .detail-hero__back { margin-bottom: var(--space-lg); }
+
+  .detail-hero__grid {
+    display: grid;
+    gap: var(--space-block);
+    align-items: start;
+  }
+
+  .detail-hero .eyebrow { margin-bottom: 1rem; }
+
+  .detail-hero__title { max-width: 18ch; margin: 0; }
+
+  .detail-hero__role {
+    margin-top: 0.7rem;
+    color: var(--signal-dark);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .detail-hero__program { margin-top: 0.5rem; }
+  .detail-hero__links { margin-top: var(--space-lg); }
+
+  .detail-hero__media {
+    order: -1;
+    max-width: 20rem;
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+  }
+
+  .detail-hero__media img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .detail-hero__placeholder {
+    display: grid;
+    aspect-ratio: 4 / 5;
+    place-items: center;
+    background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
+  }
+
+  .detail-hero__placeholder span {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* ---------------------------------------------------------------- Body */
+
+  .profile-grid {
+    display: grid;
+    gap: var(--space-block);
+    align-items: start;
+  }
+
+  .profile-block { margin-top: var(--space-section); }
+
+  .profile-aside {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .profile-card {
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    padding: var(--space-md);
+  }
+
+  .profile-card .meta { margin-bottom: 0.85rem; }
+
+  .profile-dl { display: grid; }
+
+  .profile-dl > div {
+    display: grid;
+    gap: 0.15rem;
+    border-top: 1px solid var(--line);
+    padding-block: 0.6rem;
+  }
+
+  .profile-dl > div:first-child { border-top: 0; padding-top: 0; }
+
+  .profile-dl dt {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .profile-dl dd {
+    color: var(--ink);
+    font-size: 0.92rem;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-list { display: grid; }
+
+  .profile-list li {
+    border-top: 1px solid var(--line);
+    padding-block: 0.6rem;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .profile-list li:first-child { border-top: 0; padding-top: 0; }
+
+  @media (min-width: 800px) {
+    .detail-hero__grid { grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem); }
+    .detail-hero__media { order: 0; max-width: none; justify-self: end; }
+  }
+
+  @media (min-width: 900px) {
+    .profile-grid { grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem); }
+  }
+</style>

@@ -1,0 +1,66 @@
+---
+/**
+ * The closing band that ends every page.
+ *
+ * Same dark surface, same padding, same two-column shape, same button
+ * treatment everywhere — so the bottom of every page resolves the same way
+ * instead of each one trailing off differently.
+ */
+interface Props {
+  eyebrow?: string;
+  title: string;
+  body?: string;
+  links: { label: string; href: string; primary?: boolean }[];
+}
+
+const { eyebrow = 'Next', title, body, links } = Astro.props;
+---
+
+<section class="page-section page-section--dark cta-band">
+  <div class="container-page cta-band__inner">
+    <div class="cta-band__text">
+      <p class="eyebrow eyebrow--light">{eyebrow}</p>
+      <h2 class="cta-band__title">{title}</h2>
+      {body && <p class="lede cta-band__body">{body}</p>}
+    </div>
+
+    <div class="actions cta-band__actions">
+      {
+        links.map((link) => (
+          <a href={link.href} class:list={['button', link.primary ? 'button--primary' : 'button--light']}>
+            {link.label}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta-band__inner {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .cta-band .eyebrow { margin-bottom: 0.85rem; }
+
+  .cta-band__title {
+    max-width: 22ch;
+    margin: 0;
+  }
+
+  .cta-band__body { margin-top: 1rem; }
+
+  @media (min-width: 900px) {
+    .cta-band__inner {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: var(--space-block);
+    }
+
+    .cta-band__actions { justify-content: flex-end; }
+  }
+</style>

@@ -45,26 +45,42 @@ const embed = toEmbedUrl(url);
 
 {
   embed ? (
-    <div class="my-8 aspect-video overflow-hidden rounded-lg border border-line bg-surface-sunken">
+    <div class="video-embed">
       <iframe
         src={embed}
         title={title}
         loading="lazy"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen
-        class="h-full w-full border-0"
       />
     </div>
   ) : (
-    <p class="my-8">
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-illini-blue underline decoration-illini-orange decoration-2 underline-offset-4"
-      >
+    <p class="video-embed__fallback">
+      <a class="link-underline" href={url} target="_blank" rel="noopener noreferrer">
         Watch the video
       </a>
     </p>
   )
 }
+
+<style>
+  /* Styled from the design tokens, matching the figure treatment on the
+     project and news pages rather than its own rounded-corner variant. */
+  .video-embed {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+  }
+
+  .video-embed iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .video-embed__fallback {
+    color: var(--signal-dark);
+    font-weight: 600;
+  }
+</style>

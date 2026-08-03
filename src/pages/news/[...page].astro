@@ -2,13 +2,17 @@
 import type { GetStaticPaths, Page } from 'astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import PageHeader from '../../components/PageHeader.astro';
-import NewsCard from '../../components/NewsCard.astro';
+import PageHero from '../../components/PageHero.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Card from '../../components/Card.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import FigureBand from '../../components/FigureBand.astro';
 
 export const getStaticPaths = (async ({ paginate }) => {
   const posts = (await getCollection('news', ({ data }) => !data.draft)).sort(
     (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
   );
+
   return paginate(posts, { pageSize: 9 });
 }) satisfies GetStaticPaths;
 
@@ -17,63 +21,110 @@ interface Props {
 }
 
 const { page } = Astro.props;
+
+const pageHref = (number: number) => (number === 1 ? '/news' : `/news/${number}`);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+const years = [...new Set(page.data.map((post) => post.data.date.getUTCFullYear()))];
 ---
 
-<Base
-  title={page.currentPage > 1 ? `News · Page ${page.currentPage}` : 'News'}
-  description="Awards, talks, papers, and happenings from the Gritton Lab."
->
-  <PageHeader
-    title="News"
-    intro="Awards, conference talks, new papers, and happenings around the lab."
+<Base title="News" description="Awards, presentations, grants, and visitors from the Gritton Lab.">
+  <PageHero
+    eyebrow="News"
+    title="From the lab bench."
+    lede="Awards, conference presentations, new grants, and the people passing through the lab."
+    stats={[
+      { label: 'Stories', value: String(page.total) },
+      { label: 'On this page', value: `${page.start + 1}–${page.end + 1}` },
+      { label: 'Years covered', value: years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '—' },
+    ]}
   />
 
-  <div class="container-page py-16">
-    {
-      page.data.length === 0 ? (
-        <p class="text-ink-muted">No news posts yet.</p>
-      ) : (
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {page.data.map((post) => (
-            <NewsCard post={post} />
-          ))}
-        </div>
-      )
-    }
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Latest first"
+        title="Lab news and field notes."
+        intro="The most recent items appear first. Older entries continue on the following pages."
+      />
 
-    {
-      page.lastPage > 1 && (
-        <nav
-          class="mt-14 flex items-center justify-between border-t border-line pt-8"
-          aria-label="Pagination"
-        >
-          {page.url.prev ? (
-            <a
-              href={page.url.prev}
-              class="rounded-md border border-line px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
-            >
-              ← Newer
-            </a>
-          ) : (
-            <span />
-          )}
+      <div class="section-body card-grid card-grid--3">
+        {
+          page.data.map((post) => (
+            <Card
+              href={`/news/${post.id}`}
+              eyebrow={formatDate(post.data.date)}
+              title={post.data.title}
+              summary={post.data.summary}
+              image={post.data.image}
+              imageAlt={post.data.imageAlt}
+              footLabel="Read story"
+            />
+          ))
+        }
+      </div>
 
-          <span class="text-sm text-ink-muted">
-            Page {page.currentPage} of {page.lastPage}
-          </span>
+      {
+        page.lastPage > 1 && (
+          <nav class="pagination" aria-label="News pages">
+            {page.url.prev ? (
+              <a class="button" href={page.url.prev}>Newer</a>
+            ) : (
+              <span class="button is-disabled" aria-disabled="true">Newer</span>
+            )}
 
-          {page.url.next ? (
-            <a
-              href={page.url.next}
-              class="rounded-md border border-line px-5 py-2.5 text-sm font-semibold text-illini-blue transition-colors hover:border-illini-orange"
-            >
-              Older →
-            </a>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )
-    }
-  </div>
+            <p class="meta">Page {page.currentPage} of {page.lastPage}</p>
+
+            {page.url.next ? (
+              <a class="button" href={page.url.next}>Older</a>
+            ) : (
+              <span class="button is-disabled" aria-disabled="true">Older</span>
+            )}
+          </nav>
+        )
+      }
+    </div>
+  </section>
+
+
+  <FigureBand
+    image="/images/uploads/temple-ben-howard.jpg"
+    alt="Temple Grandin visiting the Gritton Lab at the Beckman Institute"
+    label="Beckman Institute"
+    caption="Temple Grandin, on how animal models can move autism research forward."
+  />
+
+  <CtaBand
+    eyebrow="Elsewhere"
+    title="Follow the research itself."
+    body="The projects behind these stories, and the papers they turned into."
+    links={[
+      { label: 'Research projects', href: '/projects', primary: true },
+      { label: 'Publications', href: '/publications' },
+    ]}
+  />
 </Base>
+
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-top: var(--space-block);
+  }
+
+  .button.is-disabled {
+    border-color: var(--line);
+    color: var(--ink-muted);
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .button.is-disabled:hover {
+    background: transparent;
+    color: var(--ink-muted);
+  }
+</style>

@@ -1,70 +1,167 @@
 ---
 import Base from '../layouts/Base.astro';
-import PageHeader from '../components/PageHeader.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import CtaBand from '../components/CtaBand.astro';
+import FigureBand from '../components/FigureBand.astro';
 import positions from '../data/positions.json';
 
-const open = positions.positions.filter((p) => p.open);
-const closed = positions.positions.filter((p) => !p.open);
+const open = positions.positions.filter((position) => position.open);
 ---
 
-<Base title="Lab Positions" description={positions.intro}>
-  <PageHeader title={positions.heading} intro={positions.intro} />
+<Base
+  title="Lab positions"
+  description="Open postdoctoral, graduate, technician, and undergraduate positions in the Gritton Lab."
+>
+  <PageHero
+    eyebrow="Positions"
+    title={positions.heading}
+    lede={positions.intro}
+    stats={[
+      { label: 'Open roles', value: String(open.length) },
+      { label: 'Apply to', value: positions.contactEmail },
+      { label: 'Location', value: 'Urbana, Illinois' },
+    ]}
+  >
+    <a class="button button--primary" href={`mailto:${positions.contactEmail}`}>
+      Email Dr. Gritton
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    </a>
+  </PageHero>
 
-  <div class="container-page py-16">
-    <div class="grid gap-10 lg:grid-cols-[1fr_18rem] lg:items-start">
-      <div class="space-y-6">
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Open positions"
+        title="Where we are hiring."
+        intro="Each listing describes who we are looking for and exactly what to send."
+      />
+
+      {/*
+        Positions are the one place on the site where the content is genuinely
+        long-form, so they use a two-column row — description on the left, the
+        application instructions boxed on the right — rather than a card. Every
+        row has the same shape whatever the length of the text.
+      */}
+      <div class="section-body positions">
         {
-          open.map((position) => (
-            <section class="rounded-lg border border-line bg-surface p-8">
-              <div class="flex flex-wrap items-center gap-3">
-                <h2 class="text-xl">{position.title}</h2>
-                <span class="rounded-full bg-illini-orange/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-illini-orange-dark">
-                  Now recruiting
-                </span>
+          positions.positions.map((position, index) => (
+            <article class="position">
+              <div class="position__head">
+                <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3 class="position__title">{position.title}</h3>
+                  <p class:list={['position__status', position.open ? 'is-open' : 'is-closed']}>
+                    {position.open ? 'Currently accepting applications' : 'Not currently open'}
+                  </p>
+                </div>
               </div>
 
-              <p class="mt-4 leading-relaxed text-ink-muted">{position.body}</p>
+              <div class="position__body">
+                <p class="position__text">{position.body}</p>
 
-              <div class="mt-6 rounded-md border border-line bg-surface-sunken p-5">
-                <h3 class="text-xs font-semibold uppercase tracking-wider text-illini-blue">
-                  How to apply
-                </h3>
-                <p class="mt-2 text-sm leading-relaxed text-ink-muted">
-                  {position.howToApply}
-                </p>
+                <aside class="position__apply">
+                  <p class="meta">How to apply</p>
+                  <p class="position__apply-text">{position.howToApply}</p>
+                  <a class="text-link" href={`mailto:${positions.contactEmail}`}>
+                    {positions.contactEmail}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </a>
+                </aside>
               </div>
-            </section>
+            </article>
           ))
         }
-
-        {
-          closed.length > 0 && (
-            <section class="rounded-lg border border-line bg-surface-sunken p-8">
-              <h2 class="text-base">Not currently recruiting</h2>
-              <ul class="mt-3 space-y-1 text-sm text-ink-muted">
-                {closed.map((position) => (
-                  <li>{position.title}</li>
-                ))}
-              </ul>
-            </section>
-          )
-        }
       </div>
-
-      <aside class="rounded-lg border border-line bg-surface-sunken p-6 lg:sticky lg:top-28">
-        <h2 class="text-base">Get in touch</h2>
-        <p class="mt-3 text-sm leading-relaxed text-ink-muted">
-          All applications go directly to Dr. Gritton. Include a CV and a brief
-          statement of your research interests.
-        </p>
-        <a
-          href={`mailto:${positions.contactEmail}`}
-          class="mt-5 inline-block rounded-md bg-illini-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-illini-blue-light"
-        >
-          Email Dr. Gritton
-        </a>
-        <p class="mt-4 text-xs text-ink-muted">{positions.contactEmail}</p>
-      </aside>
     </div>
-  </div>
+  </section>
+
+
+  <FigureBand
+    image="/images/uploads/martin-cns.jpeg"
+    alt="Gritton Lab researchers presenting at a conference poster session"
+    label="Where the work ends up"
+    caption="Lab members present their own work at national meetings, every year."
+    focus="60% center"
+  />
+
+  <CtaBand
+    eyebrow="Before you write"
+    title="Have a look at what you would be joining."
+    body="Read the active projects and the recent publications, then tell us which questions interest you."
+    links={[
+      { label: 'Research projects', href: '/projects', primary: true },
+      { label: 'Publications', href: '/publications' },
+    ]}
+  />
 </Base>
+
+<style>
+  .positions {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .position {
+    border: 1px solid var(--line-strong);
+    background: var(--paper-bright);
+    padding: var(--space-lg);
+  }
+
+  .position__head {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0 var(--space-sm);
+    align-items: start;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--space-md);
+  }
+
+  .position__title { margin: 0; }
+
+  .position__status {
+    margin-top: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .position__status.is-open { color: var(--signal); }
+  .position__status.is-closed { color: var(--ink-muted); }
+
+  .position__body {
+    display: grid;
+    gap: var(--space-lg);
+    padding-top: var(--space-md);
+  }
+
+  .position__text {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    line-height: 1.75;
+  }
+
+  .position__apply {
+    align-self: start;
+    border-left: 2px solid var(--signal);
+    background: var(--paper);
+    padding: var(--space-md);
+  }
+
+  .position__apply-text {
+    margin-block: 0.6rem 0.9rem;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  @media (min-width: 900px) {
+    .position__body { grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 0.6fr); }
+  }
+</style>

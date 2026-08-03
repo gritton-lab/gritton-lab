@@ -1,0 +1,134 @@
+---
+/**
+ * The masthead for every interior page.
+ *
+ * Every page opens with exactly this block, in exactly this order — eyebrow,
+ * title, lede, actions, then an optional strip of figures — with identical
+ * padding above and below. That repetition is the point: a visitor should be
+ * able to tell where the title, the summary, and the entry links are on any
+ * page without looking for them.
+ *
+ * Slot `meta` renders after the actions for pages that need something extra
+ * (an external bibliography link, a filter row) without inventing a new
+ * masthead shape.
+ */
+interface Props {
+  eyebrow: string;
+  title: string;
+  lede?: string;
+  /** Small figures shown to the right of the lede on wide screens. */
+  stats?: { label: string; value: string }[];
+  class?: string;
+}
+
+const { eyebrow, title, lede, stats = [], class: className } = Astro.props;
+const hasStats = stats.length > 0;
+---
+
+<section class:list={['page-hero', className]}>
+  <div class="container-page">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1 class="page-hero__title">{title}</h1>
+
+    <div class:list={['page-hero__body', hasStats && 'has-stats']}>
+      <div class="page-hero__text">
+        {lede && <p class="lede">{lede}</p>}
+        {Astro.slots.has('default') && <div class="page-hero__actions actions"><slot /></div>}
+      </div>
+
+      {
+        hasStats && (
+          <dl class="page-hero__stats">
+            {stats.map((stat) => (
+              <div class="page-hero__stat">
+                <dt>{stat.label}</dt>
+                <dd>{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+    </div>
+
+    {Astro.slots.has('meta') && <div class="page-hero__meta"><slot name="meta" /></div>}
+  </div>
+</section>
+
+<style>
+  .page-hero {
+    background: var(--paper-bright);
+  }
+
+  .page-hero .container-page {
+    padding-block: clamp(2.75rem, 5.5vw, 4.5rem);
+  }
+
+  .page-hero .eyebrow { margin-bottom: 1rem; }
+
+  .page-hero__title {
+    max-width: 20ch;
+    margin: 0;
+  }
+
+  .page-hero__body { margin-top: var(--space-lg); }
+
+  .page-hero__text { min-width: 0; }
+  .page-hero__actions { margin-top: var(--space-lg); }
+
+  /*
+   * Figures sit in a right-hand column on wide screens but never stretch the
+   * lede: the text column keeps its own measure either way.
+   */
+  /*
+   * No rules. Three figures do not need a table drawn around them, and on the
+   * hero these would have been the only lines on the page besides the header.
+   */
+  .page-hero__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    gap: var(--space-md) var(--space-lg);
+    margin-top: var(--space-lg);
+  }
+
+  .page-hero__stat { min-width: 0; }
+
+  .page-hero__stat dt {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .page-hero__stat dd {
+    margin-top: 0.2rem;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .page-hero__meta { margin-top: var(--space-lg); }
+
+  @media (min-width: 900px) {
+    .page-hero__body.has-stats {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(14rem, 20rem);
+      align-items: start;
+      gap: var(--space-block);
+    }
+
+    /*
+     * Stacked, not a label/value row. Values like an email address or a
+     * department name are long enough to wrap mid-word against a right-aligned
+     * column, which looked broken on the People and Positions pages.
+     */
+    .page-hero__body.has-stats .page-hero__stats {
+      margin-top: 0;
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

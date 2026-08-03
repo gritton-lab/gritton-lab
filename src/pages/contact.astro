@@ -1,71 +1,145 @@
 ---
 import Base from '../layouts/Base.astro';
-import PageHeader from '../components/PageHeader.astro';
+import PageHero from '../components/PageHero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ContactForm from '../components/ContactForm.astro';
 import contact from '../data/contact.json';
+import settings from '../data/settings.json';
 ---
 
 <Base title="Contact" description={contact.intro}>
-  <PageHeader title={contact.heading} intro={contact.intro} />
+  <PageHero
+    eyebrow="Contact"
+    title={contact.heading}
+    lede={contact.intro}
+    stats={[
+      { label: 'Email', value: contact.email },
+      { label: 'Phone', value: contact.phone },
+      { label: 'Room', value: '3636 VMBSB' },
+    ]}
+  />
 
-  <div class="container-page py-16">
-    <div class="grid gap-10 lg:grid-cols-[22rem_1fr] lg:items-start">
-      <div class="rounded-lg border border-line bg-surface p-8">
-        <h2 class="text-lg">{contact.labName}</h2>
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Get in touch"
+        title="Start a conversation."
+        intro="For collaborations, prospective students, media requests, or general lab questions — send a note and we'll route it to the right person."
+      />
 
-        <address class="mt-4 space-y-0.5 text-sm not-italic leading-relaxed text-ink-muted">
-          {contact.addressLines.map((line) => <div>{line}</div>)}
-        </address>
-
-        <dl class="mt-6 space-y-3 border-t border-line pt-6 text-sm">
-          <div>
-            <dt class="text-xs font-semibold uppercase tracking-wider text-illini-blue">
-              Email
-            </dt>
-            <dd class="mt-1">
-              <a
-                href={`mailto:${contact.email}`}
-                class="text-illini-blue underline decoration-illini-orange decoration-2 underline-offset-4 hover:text-illini-orange-dark"
-              >
-                {contact.email}
-              </a>
-            </dd>
+      <div class="section-body contact-grid">
+        <div class="contact-details">
+          <div class="contact-block">
+            <p class="meta">Mailing address</p>
+            <address>
+              <strong>{contact.labName}</strong>
+              {contact.addressLines.map((line) => <span>{line}</span>)}
+            </address>
           </div>
-          <div>
-            <dt class="text-xs font-semibold uppercase tracking-wider text-illini-blue">
-              Phone
-            </dt>
-            <dd class="mt-1">
-              <a
-                href={`tel:${contact.phone}`}
-                class="text-ink-muted hover:text-illini-blue"
-              >
-                {contact.phone}
-              </a>
-            </dd>
-          </div>
-        </dl>
 
-        <a
-          href="/lab-positions"
-          class="mt-8 inline-block rounded-md bg-illini-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-illini-blue-light"
-        >
-          Interested in joining?
-        </a>
+          <div class="contact-block">
+            <p class="meta">Direct</p>
+            <ul class="contact-links">
+              <li><a class="link-underline" href={`mailto:${contact.email}`}>{contact.email}</a></li>
+              <li><a class="link-underline" href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}>{contact.phone}</a></li>
+            </ul>
+          </div>
+
+          <div class="contact-block">
+            <p class="meta">Publication records</p>
+            <ul class="contact-links">
+              <li>
+                <a class="link-underline" href={settings.social.googleScholar} target="_blank" rel="noopener noreferrer">
+                  Google Scholar
+                </a>
+              </li>
+              <li>
+                <a class="link-underline" href={settings.social.pubmed} target="_blank" rel="noopener noreferrer">
+                  PubMed bibliography
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="contact-form-wrap">
+          <ContactForm id="contact-form" />
+        </div>
       </div>
-
-      {
-        contact.mapEmbedUrl && (
-          <div class="overflow-hidden rounded-lg border border-line">
-            <iframe
-              src={contact.mapEmbedUrl}
-              title={`Map to ${contact.labName}`}
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              class="h-[30rem] w-full border-0"
-            />
-          </div>
-        )
-      }
     </div>
-  </div>
+  </section>
+
+  <section class="page-section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Find us"
+        title="Veterinary Medicine Basic Sciences Building."
+        intro="2001 South Lincoln Avenue, Urbana, Illinois — on the south end of the Illinois Urbana-Champaign campus."
+      />
+
+      <div class="section-body map">
+        <iframe
+          src={contact.mapEmbedUrl}
+          title="Map to the Veterinary Medicine Basic Sciences Building"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+  </section>
 </Base>
+
+<style>
+  .contact-grid {
+    display: grid;
+    gap: var(--space-block);
+    align-items: start;
+  }
+
+  .contact-details {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  .contact-block .meta { margin-bottom: 0.6rem; }
+
+  .contact-block address {
+    display: grid;
+    gap: 0.15rem;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    font-style: normal;
+    line-height: 1.6;
+  }
+
+  .contact-block address strong {
+    margin-bottom: 0.25rem;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .contact-links {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--ink);
+    font-size: 0.95rem;
+  }
+
+  .map {
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+  }
+
+  .map iframe {
+    display: block;
+    width: 100%;
+    height: clamp(20rem, 45vh, 28rem);
+    border: 0;
+  }
+
+  @media (min-width: 900px) {
+    .contact-grid { grid-template-columns: minmax(16rem, 0.7fr) minmax(0, 1.3fr); }
+  }
+</style>
