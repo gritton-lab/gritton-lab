@@ -2,9 +2,6 @@
 import type { GetStaticPaths } from 'astro';
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import SectionHeading from '../../components/SectionHeading.astro';
-import Card from '../../components/Card.astro';
-import CtaBand from '../../components/CtaBand.astro';
 
 type PersonIdentity = {
   firstName: string;
@@ -18,7 +15,7 @@ export const getStaticPaths = (async () => {
   const normalizeNamePart = (value: string) =>
     value
       .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[̀-ͯ]/g, '')
       .replace(/[^a-z]/gi, '')
       .toLocaleLowerCase();
 
@@ -69,7 +66,7 @@ export const getStaticPaths = (async () => {
   const normalizedWords = (value: string) =>
     value
       .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[̀-ͯ]/g, '')
       .toLocaleLowerCase()
       .replace(/[^a-z0-9]+/g, ' ')
       .trim();
@@ -93,10 +90,15 @@ export const getStaticPaths = (async () => {
   }, {});
 
   return people
+    .filter((person) => person.data.group !== 'alumni')
     .sort((a, b) => a.data.order - b.data.order)
     .map((person) => {
       const identity = identities.get(person.id)!;
-      const publicationMatchesForPerson = publications
+      // Undergraduates are matched on a first-initial alone, which is loose
+      // enough to catch an unrelated "Kim S" or "Wu T" in a long author list.
+      // They rarely carry indexed first-author work, so skip the section for
+      // them rather than surface a wrong paper.
+      const publicationMatchesForPerson = (person.data.group === 'undergrad' ? [] : publications)
         .filter((publication) => publicationMatches(publication, identity))
         .sort((a, b) => {
           if (b.data.year !== a.data.year) return b.data.year - a.data.year;
@@ -115,13 +117,13 @@ export const getStaticPaths = (async () => {
           return lastNameMatch || uniqueFirstNameMatch;
         })
         .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-        .slice(0, 3);
+        .slice(0, 4);
 
       return {
         params: { slug: person.id },
         props: {
           person,
-          relatedPublications: publicationMatchesForPerson.slice(0, 6),
+          relatedPublications: publicationMatchesForPerson.slice(0, 5),
           relatedPublicationCount: publicationMatchesForPerson.length,
           relatedNews,
         },
@@ -156,128 +158,54 @@ const contactRows = [
   d.office ? { label: 'Office', value: d.office } : null,
 ].filter(Boolean) as { label: string; value: string; href?: string }[];
 
-const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const hasAside =
+  Boolean(d.photo) || contactRows.length > 0 || d.education.length > 0 || d.links.length > 0;
+
+const truncatedPubs = relatedPublicationCount > relatedPublications.length;
+
+// A story known only to a month (no specific day) drops the day here too.
+const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
+  precision === 'month'
+    ? date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 ---
 
 <Base title={d.name} description={d.program ?? d.role}>
-  {/*
-    The profile masthead follows the same rules as PageHero — eyebrow, title,
-    supporting line, then detail — with the portrait added as a second column.
-    It keeps the same rail, padding, and type sizes as every other page.
-  */}
-  <section class="detail-hero">
+  <section class="profile">
     <div class="container-page">
-      <a class="text-link detail-hero__back" href="/people">
+      <a class="text-link profile__back" href="/people">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M19 12H5M11 18l-6-6 6-6" />
         </svg>
         All people
       </a>
 
-      <div class="detail-hero__grid">
-        <div class="detail-hero__text">
+      <div class="profile__layout">
+        <header class="profile__head">
           <p class="eyebrow">{groupLabels[d.group]}</p>
-          <h1 class="detail-hero__title">{d.name}</h1>
-          <p class="detail-hero__role">{d.role}</p>
-          {d.program && <p class="lede detail-hero__program">{d.program}</p>}
+          <h1 class="profile__name">{d.name}</h1>
+          <p class="profile__role">{d.role}</p>
+          {d.program && <p class="profile__program">{d.program}</p>}
+        </header>
 
-          {
-            d.links.length > 0 && (
-              <div class="actions detail-hero__links">
-                {d.links.map((link) => (
-                  <a class="button" href={link.url} target="_blank" rel="noopener noreferrer">
-                    {link.label}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M7 17 17 7M8 7h9v9" />
-                    </svg>
-                  </a>
-                ))}
-              </div>
-            )
-          }
-        </div>
-
-        <div class="detail-hero__media">
-          {
-            d.photo ? (
-              <img src={d.photo} alt={d.name} width="600" height="750" />
-            ) : (
-              <div class="detail-hero__placeholder" aria-hidden="true">
-                <span>Gritton Lab</span>
-              </div>
-            )
-          }
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="page-section">
-    <div class="container-page">
-      <div class="profile-grid">
-        <div class="profile-main">
-          {
-            hasBio && (
-              <>
-                <SectionHeading eyebrow="Profile" title="About" />
-                <div class="section-body prose-lab">
-                  <Content />
+        <div class:list={['profile__cols', !hasAside && 'profile__cols--solo']}>
+        {
+          hasAside && (
+            <aside class="profile__aside">
+              {d.photo ? (
+                <div class="profile__photo">
+                  <img src={d.photo} alt={d.name} width="480" height="600" loading="eager" />
                 </div>
-              </>
-            )
-          }
+              ) : (
+                <div class="profile__photo profile__photo--empty" aria-hidden="true">
+                  <span>Gritton Lab</span>
+                </div>
+              )}
 
-          {
-            relatedPublications.length > 0 && (
-              <div class:list={[hasBio && 'profile-block']}>
-                <SectionHeading
-                  eyebrow="Publications"
-                  title={`Selected work${relatedPublicationCount > relatedPublications.length ? ` (${relatedPublications.length} of ${relatedPublicationCount})` : ''}`}
-                  actionHref="/publications"
-                  actionLabel="Full archive"
-                />
-
-                <ol class="section-body ruled-list">
-                  {relatedPublications.map((publication, index) => (
-                    <li class="ruled-row ruled-row--indexed">
-                      <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
-                      <div class="ruled-row__body">
-                        <p class="note">{publication.data.authors}</p>
-                        <h3 class="ruled-row__title">{publication.data.title}</h3>
-                        <p class="ruled-row__meta">
-                          {publication.data.journal} · {publication.data.year}
-                        </p>
-                      </div>
-                      {publication.data.url && (
-                        <a
-                          class="text-link ruled-row__action"
-                          href={publication.data.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          DOI
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path d="M7 17 17 7M8 7h9v9" />
-                          </svg>
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )
-          }
-        </div>
-
-        <aside class="profile-aside">
-          {
-            contactRows.length > 0 && (
-              <div class="profile-card">
-                <p class="meta">Contact</p>
-                <dl class="profile-dl">
+              {contactRows.length > 0 && (
+                <dl class="profile__facts">
                   {contactRows.map((row) => (
-                    <div>
+                    <div class="profile__fact">
                       <dt>{row.label}</dt>
                       <dd>
                         {row.href ? (
@@ -291,107 +219,185 @@ const formatDate = (date: Date) =>
                     </div>
                   ))}
                 </dl>
-              </div>
+              )}
+
+              {d.education.length > 0 && (
+                <div class="profile__facts">
+                  <p class="profile__kicker">Appointments &amp; education</p>
+                  <ul class="profile__edu">
+                    {d.education.map((entry) => (
+                      <li>{entry}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {d.links.length > 0 && (
+                <div class="profile__links">
+                  {d.links.map((link) => (
+                    <a class="button" href={link.url} target="_blank" rel="noopener noreferrer">
+                      {link.label}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M7 17 17 7M8 7h9v9" />
+                      </svg>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </aside>
+          )
+        }
+
+        <div class="profile__main">
+          {
+            hasBio && (
+              <section class="profile__block">
+                <p class="profile__kicker profile__kicker--lead">About</p>
+                <div class="profile__bio">
+                  <Content />
+                </div>
+              </section>
             )
           }
 
           {
-            d.education.length > 0 && (
-              <div class="profile-card">
-                <p class="meta">Appointments &amp; education</p>
-                <ul class="profile-list">
-                  {d.education.map((entry) => (
-                    <li>{entry}</li>
+            relatedPublications.length > 0 && (
+              <section class="profile__block">
+                <div class="profile__block-head">
+                  <p class="profile__kicker">
+                    Selected work{truncatedPubs && ` · ${relatedPublications.length} of ${relatedPublicationCount}`}
+                  </p>
+                  <a class="text-link" href="/publications">
+                    Full archive
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </a>
+                </div>
+
+                <ol class="profile__pubs">
+                  {relatedPublications.map((publication) => (
+                    <li class="profile__pub">
+                      <p class="profile__pub-authors">{publication.data.authors}</p>
+                      <h2 class="profile__pub-title">
+                        {publication.data.url ? (
+                          <a
+                            class="link-underline"
+                            href={publication.data.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {publication.data.title}
+                          </a>
+                        ) : (
+                          publication.data.title
+                        )}
+                      </h2>
+                      <p class="profile__pub-meta">
+                        {publication.data.journal} · {publication.data.year}
+                        {publication.data.note && ` · ${publication.data.note}`}
+                      </p>
+                    </li>
                   ))}
-                </ul>
-              </div>
+                </ol>
+              </section>
             )
           }
-        </aside>
+
+          {
+            relatedNews.length > 0 && (
+              <section class="profile__block">
+                <div class="profile__block-head">
+                  <p class="profile__kicker">In the news</p>
+                  <a class="text-link" href="/news">
+                    All news
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </a>
+                </div>
+
+                <ul class="profile__news">
+                  {relatedNews.map((post) => (
+                    <li class="profile__news-item">
+                      <a href={`/news/${post.id}`}>
+                        <span class="profile__news-date">{formatDate(post.data.date, post.data.datePrecision)}</span>
+                        <span class="profile__news-title">{post.data.title}</span>
+                        <svg class="profile__news-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )
+          }
+        </div>
+        </div>
       </div>
     </div>
   </section>
-
-  {
-    relatedNews.length > 0 && (
-      <section class="page-section">
-        <div class="container-page">
-          <SectionHeading
-            eyebrow="In the news"
-            title="Mentioned in lab news."
-            actionHref="/news"
-            actionLabel="All news"
-          />
-
-          <div class="section-body card-grid card-grid--3">
-            {relatedNews.map((post) => (
-              <Card
-                href={`/news/${post.id}`}
-                eyebrow={formatDate(post.data.date)}
-                title={post.data.title}
-                summary={post.data.summary}
-                image={post.data.image}
-                imageAlt={post.data.imageAlt}
-                footLabel="Read story"
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  <CtaBand
-    eyebrow="The lab"
-    title="See the rest of the team."
-    body="Every member of the lab runs their projects end to end, from recording through analysis and writing."
-    links={[
-      { label: 'All people', href: '/people', primary: true },
-      { label: 'Open positions', href: '/lab-positions' },
-    ]}
-  />
 </Base>
 
 <style>
-  .detail-hero {
+  .profile {
     background: var(--paper-bright);
+    padding-block: clamp(1.5rem, 3vw, 2.5rem) clamp(3rem, 7vw, 5.5rem);
   }
 
-  .detail-hero .container-page {
-    padding-block: clamp(1.75rem, 3vw, 2.5rem) clamp(2.75rem, 5.5vw, 4.5rem);
+  .profile__back { margin-bottom: var(--space-lg); }
+
+  /* -------------------------------------------------------------- Layout */
+
+  .profile__head {
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--line);
   }
 
-  .detail-hero__back { margin-bottom: var(--space-lg); }
+  .profile__head .eyebrow { margin-bottom: 0.75rem; }
 
-  .detail-hero__grid {
+  .profile__cols {
     display: grid;
-    gap: var(--space-block);
-    align-items: start;
+    gap: var(--space-lg);
   }
 
-  .detail-hero .eyebrow { margin-bottom: 1rem; }
+  .profile__name {
+    margin: 0;
+    font-size: clamp(1.85rem, 3vw, 2.55rem);
+    line-height: 1.06;
+  }
 
-  .detail-hero__title { max-width: 18ch; margin: 0; }
-
-  .detail-hero__role {
-    margin-top: 0.7rem;
+  .profile__role {
+    margin-top: 0.65rem;
     color: var(--signal-dark);
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 600;
   }
 
-  .detail-hero__program { margin-top: 0.5rem; }
-  .detail-hero__links { margin-top: var(--space-lg); }
+  .profile__program {
+    margin-top: 0.3rem;
+    color: var(--ink-muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
 
-  .detail-hero__media {
-    order: -1;
-    max-width: 20rem;
+  /* -------------------------------------------------------------- Aside */
+
+  .profile__aside {
+    display: grid;
+    gap: var(--space-md);
+    align-content: start;
+  }
+
+  .profile__photo {
     overflow: hidden;
     border: 1px solid var(--line-strong);
     background: var(--paper);
   }
 
-  .detail-hero__media img {
+  .profile__photo img {
     display: block;
     width: 100%;
     aspect-ratio: 4 / 5;
@@ -399,87 +405,220 @@ const formatDate = (date: Date) =>
     object-position: center top;
   }
 
-  .detail-hero__placeholder {
+  .profile__photo--empty {
     display: grid;
     aspect-ratio: 4 / 5;
     place-items: center;
     background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
   }
 
-  .detail-hero__placeholder span {
+  .profile__photo--empty span {
     color: var(--ink-muted);
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 
-  /* ---------------------------------------------------------------- Body */
-
-  .profile-grid {
-    display: grid;
-    gap: var(--space-block);
-    align-items: start;
-  }
-
-  .profile-block { margin-top: var(--space-section); }
-
-  .profile-aside {
-    display: grid;
-    gap: var(--space-md);
-  }
-
-  .profile-card {
-    border: 1px solid var(--line-strong);
-    background: var(--paper-bright);
-    padding: var(--space-md);
-  }
-
-  .profile-card .meta { margin-bottom: 0.85rem; }
-
-  .profile-dl { display: grid; }
-
-  .profile-dl > div {
-    display: grid;
-    gap: 0.15rem;
-    border-top: 1px solid var(--line);
-    padding-block: 0.6rem;
-  }
-
-  .profile-dl > div:first-child { border-top: 0; padding-top: 0; }
-
-  .profile-dl dt {
+  .profile__kicker {
     color: var(--ink-muted);
     font-family: var(--font-mono);
     font-size: 0.6rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .profile__facts { display: grid; }
+
+  .profile__facts + .profile__facts { margin-top: var(--space-xs); }
+
+  .profile__fact {
+    display: grid;
+    gap: 0.1rem;
+    padding-block: 0.55rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .profile__fact:first-child { border-top: 0; padding-top: 0; }
+
+  .profile__fact dt {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .profile__fact dd {
+    color: var(--ink);
+    font-size: 0.88rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .profile__facts .profile__kicker { margin-bottom: 0.6rem; }
+
+  .profile__edu {
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .profile__edu li {
+    color: var(--ink-soft);
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .profile__links {
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .profile__links .button {
+    width: 100%;
+    min-height: 2.6rem;
+  }
+
+  /* -------------------------------------------------------------- Main */
+
+  .profile__main { min-width: 0; }
+
+  .profile__block { margin-top: var(--space-lg); }
+
+  .profile__main > .profile__block:first-child { margin-top: 0; }
+
+  .profile__block + .profile__block {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--line);
+  }
+
+  .profile__pub:last-child,
+  .profile__news-item:last-child { border-bottom: 0; }
+
+  .profile__block-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.25rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .profile__kicker--lead { margin-bottom: var(--space-sm); }
+
+  .profile__bio {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    line-height: 1.72;
+  }
+
+  .profile__bio :global(p) { margin-block: 0.9em; }
+  .profile__bio :global(> :first-child) { margin-top: 0; }
+  .profile__bio :global(> :last-child) { margin-bottom: 0; }
+
+  .profile__bio :global(a) {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--signal);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.2em;
+  }
+
+  /* Publications */
+
+  .profile__pubs { border-top: 1px solid var(--line); }
+
+  .profile__pub {
+    display: grid;
+    gap: 0.3rem;
+    padding-block: var(--space-md);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .profile__pub-authors {
+    color: var(--ink-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .profile__pub-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+
+  .profile__pub-meta {
+    color: var(--ink-muted);
+    font-size: 0.78rem;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* News */
+
+  .profile__news { border-top: 1px solid var(--line); }
+
+  .profile__news-item { border-bottom: 1px solid var(--line); }
+
+  .profile__news-item a {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.15rem 1rem;
+    padding-block: 0.8rem;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  .profile__news-item a:hover { color: var(--signal); }
+
+  .profile__news-date {
+    grid-column: 1 / -1;
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
-  .profile-dl dd {
-    color: var(--ink);
-    font-size: 0.92rem;
-    overflow-wrap: anywhere;
+  .profile__news-title {
+    font-family: var(--font-display);
+    font-size: 0.96rem;
+    font-weight: 600;
+    line-height: 1.35;
   }
 
-  .profile-list { display: grid; }
-
-  .profile-list li {
-    border-top: 1px solid var(--line);
-    padding-block: 0.6rem;
-    color: var(--ink-soft);
-    font-size: 0.92rem;
-    line-height: 1.55;
+  .profile__news-arrow {
+    flex: none;
+    color: var(--signal-dark);
+    transition: transform 200ms var(--ease-spring);
   }
 
-  .profile-list li:first-child { border-top: 0; padding-top: 0; }
+  .profile__news-item a:hover .profile__news-arrow { transform: translateX(3px); }
 
-  @media (min-width: 800px) {
-    .detail-hero__grid { grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem); }
-    .detail-hero__media { order: 0; max-width: none; justify-self: end; }
-  }
+  /* -------------------------------------------------------------- Wide */
 
-  @media (min-width: 900px) {
-    .profile-grid { grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem); }
+  @media (min-width: 820px) {
+    .profile__cols {
+      grid-template-columns: minmax(0, 16.5rem) minmax(0, 1fr);
+      column-gap: clamp(2.25rem, 5vw, 4rem);
+      align-items: start;
+    }
+
+    .profile__aside {
+      position: sticky;
+      top: calc(var(--header-height) + var(--space-md));
+    }
+
+    .profile__main { max-width: 46rem; }
+
+    .profile__cols--solo { grid-template-columns: minmax(0, 1fr); }
+    .profile__cols--solo .profile__main { max-width: 52rem; }
   }
 </style>

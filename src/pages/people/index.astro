@@ -41,15 +41,12 @@ const groups = [
     title: 'Staff',
     intro: 'The technical and operational work that keeps every project running.',
   },
-  {
-    key: 'alumni',
-    eyebrow: 'Lab alumni',
-    title: 'Alumni',
-    intro: 'Former researchers whose ideas and work remain part of the Gritton Lab record.',
-  },
 ]
   .map((group) => ({ ...group, people: team.filter((person) => person.data.group === group.key) }))
   .filter((group) => group.people.length > 0);
+
+// Alumni are a plain roll of names — no card, no photo, no profile page.
+const alumni = team.filter((person) => person.data.group === 'alumni');
 ---
 
 <Base
@@ -137,6 +134,31 @@ const groups = [
     ))
   }
 
+  {
+    alumni.length > 0 && (
+      <section class="page-section">
+        <div class="container-page">
+          <SectionHeading
+            eyebrow="Lab alumni"
+            title="Alumni"
+            intro="Former researchers whose ideas and work remain part of the Gritton Lab record."
+          />
+
+          <ul class="section-body alumni-roll">
+            {alumni.map((person) => (
+              <li class="alumni-roll__item">
+                <span class="alumni-roll__name">{person.data.name}</span>
+                {person.data.program && (
+                  <span class="alumni-roll__note">{person.data.program}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
   <CtaBand
     eyebrow="Join the network"
     title="Bring a new signal into the lab."
@@ -193,5 +215,40 @@ const groups = [
   @media (min-width: 800px) {
     .pi { grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr); }
     .pi__media { max-width: none; }
+  }
+
+  /* Alumni roll — names only, no cards. */
+  .alumni-roll { border-top: 1px solid var(--line); }
+
+  .alumni-roll__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .alumni-roll__name {
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 0.96rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .alumni-roll__note {
+    color: var(--ink-muted);
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  @media (min-width: 640px) {
+    .alumni-roll {
+      columns: 2;
+      column-gap: clamp(1.5rem, 4vw, 3.5rem);
+    }
+
+    .alumni-roll__item { break-inside: avoid; }
   }
 </style>
