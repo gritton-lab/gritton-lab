@@ -14,8 +14,16 @@
  *   portrait— taller 4:5 crop anchored to the top, for headshots
  *
  * When `image` is absent a hatched placeholder of the correct ratio is drawn,
- * so a missing photo never changes the height of its row.
+ * so a missing photo never changes the height of its row. News is the one
+ * collection where that is common rather than occasional, so an optional
+ * `category` swaps the placeholder for a colored panel naming the kind of
+ * story instead — a row of undocumented news reads as distinct, deliberate
+ * cards rather than the same gray block repeated. Colors and icons come from
+ * `../lib/newsCategories`, shared with NewsReel's masthead slides so a story
+ * looks the same whichever spot on the page shows it without a photo.
  */
+import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_STYLE, type NewsCategory } from '../lib/newsCategories';
+
 interface Props {
   href: string;
   title: string;
@@ -24,6 +32,8 @@ interface Props {
   image?: string;
   imageAlt?: string;
   media?: 'photo' | 'figure' | 'portrait';
+  /** Shown in the placeholder in place of "Gritton Lab" when there's no image. */
+  category?: NewsCategory;
   /** Small labels below the summary — methods, programmes, topics. */
   tags?: string[];
   /** Left-hand footer text; the arrow is always drawn on the right. */
@@ -40,11 +50,16 @@ const {
   image,
   imageAlt = '',
   media = 'photo',
+  category,
   tags = [],
   footLabel = 'Read more',
   footNote,
   class: className,
 } = Astro.props;
+
+const placeholderStyle = category
+  ? `--cat-from:${CATEGORY_STYLE[category].from};--cat-to:${CATEGORY_STYLE[category].to}`
+  : undefined;
 ---
 
 <a href={href} class:list={['card', className]}>
@@ -64,11 +79,40 @@ const {
         class:list={[
           'card__media',
           'card__media--empty',
+          category && 'card__media--tinted',
           media === 'portrait' && 'card__media--portrait',
         ]}
+        style={placeholderStyle}
         aria-hidden="true"
       >
-        <span>Gritton Lab</span>
+        {
+          category ? (
+            <>
+              <svg
+                class="card__placeholder-ghost"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="1"
+                set:html={CATEGORY_ICON[category]}
+              />
+              <span class="card__placeholder-tag">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="2"
+                  set:html={CATEGORY_ICON[category]}
+                />
+                <span>{CATEGORY_LABEL[category]}</span>
+              </span>
+            </>
+          ) : (
+            <span>Gritton Lab</span>
+          )
+        }
       </div>
     )
   }

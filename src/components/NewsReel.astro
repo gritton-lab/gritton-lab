@@ -1,0 +1,719 @@
+---
+/**
+ * The photo timeline that fills the News masthead.
+ *
+ * The News hero carried a title, a lede, and three figures, which left the
+ * middle of the block empty. This puts the lab's own pictures there instead:
+ * a picture on the left, the story it belongs to on the right, and a dated
+ * axis under both.
+ *
+ * The picture is deliberately letterboxed. It has to sit in the gap that was
+ * already there without pushing the news grid off the screen, so it is a band
+ * rather than a picture box.
+ *
+ * The right-hand column replaced the run of figures that used to sit there —
+ * story count, page range, years covered. Those were three numbers that never
+ * changed and told a reader nothing about the news; the same space now says
+ * what the picture beside it actually is, and turns over with it.
+ *
+ * Controls are the three the reel needs — back, stop, forward. Any manual move
+ * stops playback, because a picture that slides away while someone is reading
+ * about it is worse than one that sits still.
+ *
+ * Used only by the News index; items arrive newest-first and pre-formatted, so
+ * the axis reads left to right in the same order as the cards below it.
+ *
+ * A story without a photo shows the same colored category panel Card uses
+ * for its own empty state (`../lib/newsCategories`) rather than a plain
+ * hatch, so the picture slot is never just blank stripes.
+ */
+import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_STYLE, type NewsCategory } from '../lib/newsCategories';
+
+interface Item {
+  href: string;
+  title: string;
+  /** Display date, e.g. `Apr 30, 2024`. */
+  date: string;
+  /** A sentence or two on what the story was. */
+  summary?: string;
+  /** Axis label, e.g. `Apr 30`. */
+  stamp: string;
+  /** Axis sub-label, e.g. `2024`. */
+  year: string;
+  image?: string;
+  imageAlt: string;
+  /** Vertical `object-position` that keeps the faces in the band. */
+  focus?: string;
+  /** Drives the colored panel shown in place of a missing photo. */
+  category?: NewsCategory;
+}
+
+interface Props {
+  items: Item[];
+  /** Milliseconds each frame holds before advancing. */
+  interval?: number;
+  /** How many stops the axis shows at once before it turns over. */
+  perBatch?: number;
+}
+
+const { items, interval = 5200, perBatch = 5 } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/*
+ * The axis shows a handful of dates at a time, not the whole archive. Twenty
+ * nodes across one column is a ruler, not a timeline: the labels collide and
+ * nothing is readable. Reaching the end of a batch turns it over to the next
+ * five, so the spacing never changes and the counter carries the whole run.
+ */
+const per = Math.min(perBatch, items.length);
+---
+
+{
+  items.length > 0 && (
+    <div
+      class="reel"
+      data-reel
+      data-interval={interval}
+      data-per={per}
+      style={`--per:${per}`}
+      role="group"
+      aria-roledescription="carousel"
+      aria-label="Lab news in pictures"
+    >
+      <div class="reel__top">
+        <div class="reel__stage">
+          {items.map((item, i) => (
+            <a
+              class:list={['reel__slide', i === 0 && 'is-active']}
+              href={item.href}
+              data-slide
+              aria-label={item.title}
+              aria-hidden={i === 0 ? undefined : 'true'}
+              tabindex={i === 0 ? undefined : '-1'}
+            >
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt=""
+                  style={`object-position: center ${item.focus ?? '42%'}`}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              ) : item.category ? (
+                <div
+                  class="reel__hatch reel__hatch--tinted"
+                  style={`--cat-from:${CATEGORY_STYLE[item.category].from};--cat-to:${CATEGORY_STYLE[item.category].to}`}
+                  aria-hidden="true"
+                >
+                  <svg
+                    class="card__placeholder-ghost"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="1"
+                    set:html={CATEGORY_ICON[item.category]}
+                  />
+                  <span class="card__placeholder-tag reel__hatch-tag">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" set:html={CATEGORY_ICON[item.category]} />
+                    <span>{CATEGORY_LABEL[item.category]}</span>
+                  </span>
+                </div>
+              ) : (
+                <span class="reel__hatch" aria-hidden="true" />
+              )}
+            </a>
+          ))}
+        </div>
+
+        {/*
+          Every story is rendered and stacked in one grid cell rather than
+          swapped in by script: the column then stands as tall as its longest
+          entry from first paint, so turning the reel never reflows the page
+          under the reader's cursor.
+        */}
+        <div class="reel__briefs">
+          {items.map((item, i) => (
+            <div
+              class:list={['reel__brief', i === 0 && 'is-active']}
+              data-brief
+              aria-hidden={i === 0 ? undefined : 'true'}
+            >
+              <p class="reel__date">{item.date}</p>
+              <p class="reel__title">{item.title}</p>
+              {item.summary && <p class="reel__summary">{item.summary}</p>}
+              <a class="reel__more" href={item.href} tabindex={i === 0 ? undefined : '-1'}>
+                Read the story
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 17L17 7M8 7h9v9" />
+                </svg>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* One picture is not a timeline; it just sits there. */}
+      {items.length > 1 && (
+        <>
+          <div class="reel__bar">
+            <p class="reel__count">
+              <span data-count>{pad(1)}</span> / {pad(items.length)}
+            </p>
+
+            <div class="reel__controls">
+              <button type="button" class="reel__btn" data-prev aria-label="Previous story">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+              </button>
+              <button
+                type="button"
+                class="reel__btn"
+                data-toggle
+                aria-label="Stop"
+                aria-pressed="true"
+              >
+                <svg class="reel__icon-stop" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 5v14M15 5v14" />
+                </svg>
+                <svg class="reel__icon-play" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 5l11 7-11 7z" />
+                </svg>
+              </button>
+              <button type="button" class="reel__btn" data-next aria-label="Next story">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="reel__axis" data-axis>
+            <span class="reel__rail" aria-hidden="true" />
+            <span class="reel__rail reel__rail--run" data-run aria-hidden="true" />
+
+            <ol class="reel__stops">
+              {items.map((item, i) => (
+                <li hidden={i >= per}>
+                  <button
+                    type="button"
+                    class="reel__stop"
+                    data-stop
+                    aria-current={i === 0 ? 'true' : undefined}
+                  >
+                    <span class="reel__node" aria-hidden="true" />
+                    <span class="reel__stamp" aria-hidden="true">{item.stamp}</span>
+                    <span class="reel__year" aria-hidden="true">{item.year}</span>
+                    <span class="reel__sr">{item.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+<style>
+  .reel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* ------------------------------------------------------------------
+   * Picture and story, side by side
+   * ---------------------------------------------------------------- */
+
+  .reel__top {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  @media (min-width: 900px) {
+    .reel__top {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+      align-items: start;
+      gap: var(--space-block);
+    }
+  }
+
+  /*
+   * A band, not a picture box: it has to fit the gap that was already in the
+   * masthead without displacing the news grid below.
+   */
+  .reel__stage {
+    position: relative;
+    aspect-ratio: 29 / 10;
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  .reel__slide {
+    position: absolute;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    /* Set per move by the script, so a frame leaves the way the reel is going. */
+    transform: translate3d(var(--from, 1.5rem), 0, 0) scale(1.03);
+    pointer-events: none;
+    text-decoration: none;
+    transition: opacity 520ms ease, transform 680ms var(--ease-spring);
+  }
+
+  .reel__slide.is-active {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .reel__slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Stories filed without a photograph keep their place in the run. */
+  .reel__hatch {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
+  }
+
+  /*
+   * A categorized story gets Card's own colored panel instead of the plain
+   * hatch — same gradient, same oversized ghost icon and corner tag
+   * (`.card__placeholder-ghost`/`.card__placeholder-tag`, global.css), just
+   * filling this wider letterboxed frame instead of a grid tile. A locally
+   * scoped class carries the background so it doesn't have to out-specificity
+   * `.reel__hatch`'s own.
+   */
+  .reel__hatch--tinted {
+    background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
+  }
+
+  .reel__slide:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+  }
+
+  /* ------------------------------------------------------------------
+   * The story beside the picture
+   *
+   * Every entry occupies the same grid cell, so the column is as tall as its
+   * longest entry and nothing below it moves as the reel turns.
+   * ---------------------------------------------------------------- */
+
+  .reel__briefs { display: grid; }
+
+  .reel__brief {
+    grid-area: 1 / 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 380ms ease;
+  }
+
+  .reel__brief.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .reel__date {
+    color: var(--signal);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .reel__title {
+    margin-top: 0.7rem;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .reel__summary {
+    margin-top: 0.6rem;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .reel__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: var(--space-md);
+    color: var(--ink);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .reel__more svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    transition: translate 200ms var(--ease-spring);
+  }
+
+  .reel__more:hover { color: var(--signal); }
+  .reel__more:hover svg { translate: 0.15rem -0.15rem; }
+
+  .reel__more:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+  }
+
+  /* ------------------------------------------------------------------
+   * Counter and controls
+   * ---------------------------------------------------------------- */
+
+  .reel__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    /* Clears both columns above it, not just the picture. */
+    margin-top: var(--space-lg);
+  }
+
+  .reel__count {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+  }
+
+  .reel__count [data-count] { color: var(--ink); }
+
+  .reel__controls {
+    display: flex;
+    gap: 0.3rem;
+  }
+
+  .reel__btn {
+    display: grid;
+    width: 1.85rem;
+    height: 1.85rem;
+    place-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+
+  .reel__btn:hover {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .reel__btn:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  .reel__btn svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: square;
+  }
+
+  .reel__btn[data-toggle] .reel__icon-play { display: none; fill: currentColor; stroke: none; }
+  .reel__btn[data-toggle][aria-pressed='false'] .reel__icon-stop { display: none; }
+  .reel__btn[data-toggle][aria-pressed='false'] .reel__icon-play { display: block; }
+
+  /* ------------------------------------------------------------------
+   * The axis
+   *
+   * One node per story, evenly spaced, newest on the left so it runs in the
+   * same order as the cards below. The run line creeps between nodes while the
+   * reel plays, which is the only thing marking time.
+   * ---------------------------------------------------------------- */
+
+  .reel__axis {
+    position: relative;
+    margin-top: var(--space-md);
+    padding-top: 0.3rem;
+    transition: opacity 180ms ease;
+  }
+
+  /*
+   * The axis blinks out and back when it turns over to the next five dates.
+   * Sliding the old batch off would race the picture sliding underneath it;
+   * a fade says "different stretch of the timeline" without competing.
+   */
+  .reel__axis.is-turning { opacity: 0; }
+
+  .reel__rail {
+    position: absolute;
+    top: 0.3rem;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--line-strong);
+    /* Nodes are 7px across and sit flush left in their cell. */
+    translate: 0 3px;
+  }
+
+  .reel__rail--run {
+    width: calc(var(--run, 0) / var(--per) * 100% + 3px);
+    background: var(--ink);
+    transition: width 120ms linear;
+  }
+
+  .reel__stops {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--per), minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reel__stop {
+    display: block;
+    width: 100%;
+    padding: 0 0.3rem 0 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .reel__stop:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+  }
+
+  .reel__node {
+    display: block;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--paper-bright);
+    transition: background-color 200ms ease, border-color 200ms ease, scale 200ms var(--ease-spring);
+  }
+
+  .reel__stop:hover .reel__node { border-color: var(--ink); }
+
+  .reel__stop[aria-current] .reel__node {
+    border-color: var(--signal);
+    background: var(--signal);
+    scale: 1.5;
+  }
+
+  .reel__stamp,
+  .reel__year {
+    display: block;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    line-height: 1.25;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: color 160ms ease;
+  }
+
+  .reel__stamp {
+    margin-top: 0.5rem;
+    color: var(--ink-muted);
+    font-size: 0.58rem;
+  }
+
+  .reel__year {
+    color: var(--line-strong);
+    font-size: 0.52rem;
+  }
+
+  .reel__stop[aria-current] .reel__stamp { color: var(--ink); }
+  .reel__stop[aria-current] .reel__year { color: var(--ink-muted); }
+
+  .reel__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 34rem) {
+    .reel__stage { aspect-ratio: 3 / 2; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reel__slide {
+      transform: none;
+      transition: opacity 200ms linear;
+    }
+  }
+</style>
+
+<script>
+  const setup = (reel: HTMLElement) => {
+    const slides = [...reel.querySelectorAll<HTMLAnchorElement>('[data-slide]')];
+    const briefs = [...reel.querySelectorAll<HTMLElement>('[data-brief]')];
+    const stops = [...reel.querySelectorAll<HTMLButtonElement>('[data-stop]')];
+    const run = reel.querySelector<HTMLElement>('[data-run]');
+    const count = reel.querySelector<HTMLElement>('[data-count]');
+    const axis = reel.querySelector<HTMLElement>('[data-axis]');
+    const toggle = reel.querySelector<HTMLButtonElement>('[data-toggle]');
+    const prev = reel.querySelector<HTMLButtonElement>('[data-prev]');
+    const next = reel.querySelector<HTMLButtonElement>('[data-next]');
+    if (slides.length < 2 || !run || !count || !axis || !toggle || !prev || !next) return;
+
+    const interval = Number(reel.dataset.interval) || 5200;
+    const per = Number(reel.dataset.per) || 5;
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    let index = 0;
+    let batch = 0;
+    let elapsed = 0;
+    let playing = !calm.matches;
+    let last: number | null = null;
+    let turning: number | undefined;
+
+    /* The run line sits between nodes while a frame holds, so it reads as time
+     * passing rather than as a step that already happened. It measures the
+     * current batch, not the whole archive — the counter carries that. */
+    const paint = () => {
+      const creep = playing ? Math.min(elapsed / interval, 1) : 0;
+      run.style.setProperty('--run', String((index % per) + creep));
+    };
+
+    /** Show only the five stops belonging to `batch`. */
+    const fill = () => {
+      stops.forEach((stop, i) => {
+        (stop.parentElement as HTMLElement).hidden = Math.floor(i / per) !== batch;
+      });
+    };
+
+    /*
+     * Turning the axis over is one fade out, one swap, one fade in. The swap
+     * has to wait for the fade, so it runs on a timer rather than a
+     * transitionend — a batch change interrupted by a fast click would
+     * otherwise leave the axis stranded at zero opacity.
+     */
+    const turnTo = (next: number) => {
+      if (next === batch) return;
+      batch = next;
+      window.clearTimeout(turning);
+
+      if (calm.matches) {
+        fill();
+        return;
+      }
+
+      axis.classList.add('is-turning');
+      turning = window.setTimeout(() => {
+        fill();
+        paint();
+        axis.classList.remove('is-turning');
+      }, 180);
+    };
+
+    /** `dir` is +1 forward, -1 back; it decides which way the pictures move. */
+    const go = (to: number, dir: number) => {
+      const target = (to + slides.length) % slides.length;
+      if (target === index) return;
+
+      const leaving = slides[index];
+      const entering = slides[target];
+
+      leaving.style.setProperty('--from', dir > 0 ? '-1.5rem' : '1.5rem');
+      leaving.classList.remove('is-active');
+      leaving.setAttribute('aria-hidden', 'true');
+      leaving.tabIndex = -1;
+
+      entering.style.setProperty('--from', dir > 0 ? '1.5rem' : '-1.5rem');
+      // Land the incoming frame on its start offset before it begins to move.
+      void entering.offsetWidth;
+      entering.classList.add('is-active');
+      entering.removeAttribute('aria-hidden');
+      entering.removeAttribute('tabindex');
+
+      // The story text cross-fades in place; only the picture travels.
+      const oldBrief = briefs[index];
+      const newBrief = briefs[target];
+      oldBrief.classList.remove('is-active');
+      oldBrief.setAttribute('aria-hidden', 'true');
+      oldBrief.querySelector('a')?.setAttribute('tabindex', '-1');
+      newBrief.classList.add('is-active');
+      newBrief.removeAttribute('aria-hidden');
+      newBrief.querySelector('a')?.removeAttribute('tabindex');
+
+      stops[index].removeAttribute('aria-current');
+      stops[target].setAttribute('aria-current', 'true');
+
+      index = target;
+      elapsed = 0;
+      count.textContent = String(index + 1).padStart(2, '0');
+      turnTo(Math.floor(index / per));
+      paint();
+    };
+
+    const setPlaying = (on: boolean) => {
+      playing = on;
+      toggle.setAttribute('aria-pressed', String(on));
+      toggle.setAttribute('aria-label', on ? 'Stop' : 'Play');
+      paint();
+    };
+
+    /** Any deliberate move stops playback rather than fighting the reader. */
+    const step = (dir: number) => {
+      setPlaying(false);
+      go(index + dir, dir);
+    };
+
+    prev.addEventListener('click', () => step(-1));
+    next.addEventListener('click', () => step(1));
+    toggle.addEventListener('click', () => setPlaying(!playing));
+
+    stops.forEach((stop, i) => {
+      stop.addEventListener('click', () => {
+        // Clicking the node already showing means "hold here", not "do nothing".
+        setPlaying(false);
+        go(i, i > index ? 1 : -1);
+      });
+    });
+
+    reel.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') step(-1);
+      else if (event.key === 'ArrowRight') step(1);
+    });
+
+    const frame = (now: number) => {
+      if (last !== null && playing) {
+        elapsed += now - last;
+        if (elapsed >= interval) go(index + 1, 1);
+        else paint();
+      }
+      last = now;
+      requestAnimationFrame(frame);
+    };
+
+    fill();
+    setPlaying(playing);
+    requestAnimationFrame(frame);
+  };
+
+  document.querySelectorAll<HTMLElement>('[data-reel]').forEach(setup);
+</script>

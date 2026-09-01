@@ -536,8 +536,12 @@
    * which broke every row they appeared in.
    */
   .card__media--empty {
+    position: relative;
     display: grid;
     place-items: center;
+    overflow: hidden;
+    /* An uncategorized story — or a project/person, which never hits this
+       state — keeps the original neutral hatch. */
     background:
       repeating-linear-gradient(
         135deg,
@@ -551,6 +555,59 @@
     font-family: var(--font-mono);
     font-size: 0.62rem;
     letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * A categorized story trades the hatch for a full-bleed diagonal wash of
+   * its color (`--cat-from`/`--cat-to`, set in Card.astro) — bold enough to
+   * read as a designed panel, not a fallback. A grid of undocumented stories
+   * reads as distinct, deliberate cards instead of the same gray block
+   * repeated.
+   */
+  .card__media--tinted {
+    background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
+  }
+
+  /*
+   * The category's own icon, oversized and set low-opacity in the corner as
+   * a background motif — the panel's texture, not its message.
+   */
+  .card__placeholder-ghost {
+    position: absolute;
+    right: -8%;
+    bottom: -14%;
+    width: 62%;
+    aspect-ratio: 1;
+    opacity: 0.16;
+    pointer-events: none;
+  }
+
+  /*
+   * The message itself: a small, high-contrast tag pinned to the corner —
+   * icon plus the category name, in white on a dark scrim so it reads
+   * against any of the six panel colors without per-hue tuning.
+   */
+  .card__placeholder-tag {
+    position: absolute;
+    left: 0.85rem;
+    bottom: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    background: rgba(14, 17, 26, 0.4);
+    padding: 0.32rem 0.55rem;
+    color: #fff;
+  }
+
+  .card__placeholder-tag svg { display: block; flex-shrink: 0; }
+
+  .card__placeholder-tag span {
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 

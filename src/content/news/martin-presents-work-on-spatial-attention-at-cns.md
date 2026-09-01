@@ -1,6 +1,7 @@
 ---
 title: Martin presents work on spatial attention at CNS
 date: 2024-04-16
+category: presentation
 summary: Work on the role of alpha and gamma rhythms in auditory spatial attention, presented at the 2024 Cognitive Neuroscience Society meeting in Toronto.
 image: /images/uploads/martin-cns.jpeg
 imageAlt: Martin presenting his poster at the 2024 CNS meeting

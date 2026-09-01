@@ -6,6 +6,7 @@ import PageHero from '../../components/PageHero.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import Card from '../../components/Card.astro';
 import CtaBand from '../../components/CtaBand.astro';
+import NewsReel from '../../components/NewsReel.astro';
 
 export const getStaticPaths = (async ({ paginate }) => {
   const posts = (await getCollection('news', ({ data }) => !data.draft)).sort(
@@ -23,10 +24,55 @@ const { page } = Astro.props;
 
 const pageHref = (number: number) => (number === 1 ? '/news' : `/news/${number}`);
 
-const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+// A story known only to a month (no specific day) drops the day here too.
+const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
+  precision === 'month'
+    ? date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
-const years = [...new Set(page.data.map((post) => post.data.date.getUTCFullYear()))];
+/*
+ * Where the faces are, as a percentage down each photograph.
+ *
+ * The reel frame is a wide band, so it shows roughly the middle third of a
+ * 4:3 photo and a centred crop beheads people. These are measured off the
+ * files: the value is the `object-position` that lands the faces in the upper
+ * half of the band, clear of the caption. A story that is not listed falls
+ * back to 42%, which suits the usual group shot; add a line here if a new
+ * photograph crops badly.
+ */
+const FACES: Record<string, string> = {
+  'martin-presents-work-on-spatial-attention-at-cns': '51%',
+  'meeting-temple-grandin': '21%',
+  'oliver-presents-at-bioe-graduate-research-symposium': '40%',
+  'oliver-presents-at-ear-day-2024': '53%',
+  'undergrads-present-posters-at-2024-isur-and-urs-expos': '26%',
+};
+
+/*
+ * The masthead reel runs every story in the collection, not just this page of
+ * it, newest first so its axis reads in the same order as the cards below.
+ * Stories filed without a photograph keep their place and show a hatch, so the
+ * axis is a record of the news rather than a record of the photography.
+ */
+const reelItems = (await getCollection('news', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .map((post) => ({
+    href: `/news/${post.id}`,
+    title: post.data.title,
+    summary: post.data.summary,
+    date: formatDate(post.data.date, post.data.datePrecision),
+    // Month and day on the axis, the year stacked under it, as on a chart.
+    // A month-only story just shows the month, same as everywhere else it's dated.
+    stamp:
+      post.data.datePrecision === 'month'
+        ? post.data.date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })
+        : post.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+    year: String(post.data.date.getUTCFullYear()),
+    image: post.data.image,
+    imageAlt: post.data.imageAlt,
+    focus: FACES[post.id] ?? '42%',
+    category: post.data.category,
+  }));
 ---
 
 <Base title="News" description="Awards, presentations, grants, and visitors from the Gritton Lab.">
@@ -34,12 +80,9 @@ const years = [...new Set(page.data.map((post) => post.data.date.getUTCFullYear(
     eyebrow="News"
     title="From the lab bench."
     lede="Awards, conference presentations, new grants, and the people passing through the lab."
-    stats={[
-      { label: 'Stories', value: String(page.total) },
-      { label: 'On this page', value: `${page.start + 1}–${page.end + 1}` },
-      { label: 'Years covered', value: years.length ? `${Math.min(...years)}–${Math.max(...years)}` : '—' },
-    ]}
-  />
+  >
+    <NewsReel items={reelItems} />
+  </PageHero>
 
   <section class="page-section">
     <div class="container-page">
@@ -54,11 +97,12 @@ const years = [...new Set(page.data.map((post) => post.data.date.getUTCFullYear(
           page.data.map((post) => (
             <Card
               href={`/news/${post.id}`}
-              eyebrow={formatDate(post.data.date)}
+              eyebrow={formatDate(post.data.date, post.data.datePrecision)}
               title={post.data.title}
               summary={post.data.summary}
               image={post.data.image}
               imageAlt={post.data.imageAlt}
+              category={post.data.category}
               footLabel="Read story"
             />
           ))

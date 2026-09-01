@@ -20,7 +20,7 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { title, date, summary, image, imageAlt, video } = post.data;
+const { title, date, datePrecision, summary, image, imageAlt, video } = post.data;
 const { Content } = await render(post);
 
 const more = (await getCollection('news', ({ data }) => !data.draft))
@@ -28,51 +28,59 @@ const more = (await getCollection('news', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 3);
 
-const formatDate = (value: Date) =>
-  value.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+// A story known only to a month (no specific day) drops the day here too.
+const formatDate = (value: Date, precision: 'day' | 'month' = 'day') =>
+  precision === 'month'
+    ? value.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    : value.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
-const formatShort = (value: Date) =>
-  value.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
+  precision === 'month'
+    ? value.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+    : value.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 ---
 
 <Base title={title} description={summary}>
-  <section class="detail-hero">
+  <section class:list={['story', image && 'has-figure']}>
     <div class="container-page">
-      <a class="text-link detail-hero__back" href="/news">
+      <a class="text-link story__back" href="/news">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M19 12H5M11 18l-6-6 6-6" />
         </svg>
         All news
       </a>
 
-      <p class="eyebrow">
-        <time datetime={date.toISOString().slice(0, 10)}>{formatDate(date)}</time>
-      </p>
-      <h1 class="detail-hero__title">{title}</h1>
-      {summary && <p class="lede detail-hero__summary">{summary}</p>}
-    </div>
-  </section>
+      <div class="story__body">
+        <div class="story__head">
+          <p class="eyebrow">
+            <time datetime={date.toISOString().slice(0, 10)}>{formatDate(date, datePrecision)}</time>
+          </p>
+          <h1 class="story__title">{title}</h1>
+        </div>
 
-  <section class="page-section">
-    <div class="container-page container-page--narrow">
-      {
-        video ? (
-          <div class="story-media">
-            <VideoEmbed url={video} title={title} />
-          </div>
-        ) : (
+        {
           image && (
-            <figure class="story-media story-figure">
-              <img src={image} alt={imageAlt} />
+            <figure class="story__figure">
+              <img src={image} alt="" />
               {imageAlt && <figcaption class="meta">{imageAlt}</figcaption>}
             </figure>
           )
-        )
-      }
+        }
 
-      <article class="prose-lab">
-        <Content />
-      </article>
+        <div class="story__main">
+          {
+            video && (
+              <div class="story__video">
+                <VideoEmbed url={video} title={title} />
+              </div>
+            )
+          }
+
+          <article class="prose-lab story__prose">
+            <Content />
+          </article>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -91,11 +99,12 @@ const formatShort = (value: Date) =>
             {more.map((item) => (
               <Card
                 href={`/news/${item.id}`}
-                eyebrow={formatShort(item.data.date)}
+                eyebrow={formatShort(item.data.date, item.data.datePrecision)}
                 title={item.data.title}
                 summary={item.data.summary}
                 image={item.data.image}
                 imageAlt={item.data.imageAlt}
+                category={item.data.category}
                 footLabel="Read story"
               />
             ))}
@@ -117,36 +126,137 @@ const formatShort = (value: Date) =>
 </Base>
 
 <style>
-  .detail-hero {
-    background: var(--paper-bright);
+  /*
+   * A lab news item is usually two or three sentences. The page used to open
+   * with the summary, then repeat it almost verbatim as the first line of the
+   * story, then set the photograph in its own centred column that lined up
+   * with nothing above it — three sentences spread over a screen and a half of
+   * white space.
+   *
+   * So: no summary paragraph (the story's own opening is the summary, and
+   * `description` still carries it to search results and link previews), the
+   * date, headline and story in one column against one left edge, and the
+   * photograph beside them in space the masthead was wasting anyway.
+   */
+
+  .story { background: var(--paper-bright); }
+
+  /*
+   * Light on the bottom: the "More news" section below brings its own section
+   * padding, and doubling the two left a short story marooned in white.
+   */
+  .story .container-page {
+    padding-block: clamp(1.5rem, 2.6vw, 2.25rem) clamp(0.75rem, 1.4vw, 1.25rem);
   }
 
-  .detail-hero .container-page {
-    padding-block: clamp(1.75rem, 3vw, 2.5rem) clamp(2.75rem, 5.5vw, 4.5rem);
+  .story__back { margin-bottom: var(--space-lg); }
+  .story .eyebrow { margin-bottom: 0.9rem; }
+
+  .story__title {
+    max-width: 20ch;
+    margin: 0;
   }
 
-  .detail-hero__back { margin-bottom: var(--space-lg); }
-  .detail-hero .eyebrow { margin-bottom: 1rem; }
-  .detail-hero__title { max-width: 22ch; margin: 0; }
-  .detail-hero__summary { margin-top: var(--space-md); }
+  /*
+   * Stacked on a phone the source order is what a reader wants: headline,
+   * photograph, story.
+   */
+  .story__body { display: grid; gap: var(--space-lg); }
 
-  .story-media { margin-bottom: var(--space-lg); }
+  @media (min-width: 900px) {
+    /*
+     * On a wide screen the photograph steps out into a reserved column and the
+     * story closes up under the headline.
+     *
+     * It is taken out of flow rather than given a grid track: as a grid item
+     * spanning the headline and story rows it inflated them, which put a
+     * screen of white between the headline and its own first sentence — the
+     * gap this page was rebuilt to remove. `min-height` keeps a one-sentence
+     * story from ending above the bottom of its own photograph.
+     */
+    .story.has-figure .story__body {
+      position: relative;
+      display: block;
+      min-height: 26rem;
+      padding-right: calc(24rem + var(--space-block));
+    }
 
-  .story-figure {
+    .story.has-figure .story__figure {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 24rem;
+    }
+
+    .story.has-figure .story__main { margin-top: var(--space-lg); }
+  }
+
+  .story__video { max-width: 46rem; margin-bottom: var(--space-lg); }
+
+  .story__figure {
     border: 1px solid var(--line-strong);
     background: var(--paper-bright);
-    padding: clamp(0.5rem, 1.5vw, 0.9rem);
+    padding: 0.5rem;
   }
 
-  .story-figure img {
+  .story__figure img {
     display: block;
     width: 100%;
-    height: auto;
+    max-height: 22rem;
+    /* Crops rather than squashes when a tall photo meets the cap. */
+    object-fit: cover;
   }
 
-  .story-figure figcaption {
-    margin-top: 0.8rem;
+  .story__figure figcaption {
+    margin-top: 0.7rem;
     border-top: 1px solid var(--line);
-    padding-top: 0.65rem;
+    padding-top: 0.6rem;
   }
+
+  /*
+   * Pictures inside the story body.
+   *
+   * These are pasted into the markdown one per paragraph, and a story like the
+   * undergraduate symposium round-up carries four of them in a run. Left to
+   * themselves they stacked down the left edge at four different sizes —
+   * portrait, portrait, landscape, landscape — a ragged staircase with the
+   * right half of the page empty.
+   *
+   * So the story column becomes a two-track grid: prose spans both tracks and
+   * reads as normal, while a picture-only paragraph takes a single track. Runs
+   * of photographs fall into a tidy gallery, and a lone photograph still sits
+   * at a sensible size instead of filling the measure.
+   */
+  .story__prose {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--space-md);
+  }
+
+  .story__prose > :global(*) { grid-column: 1 / -1; }
+
+  @media (min-width: 34rem) {
+    .story__prose { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* Half the gutter each side, so the row gap matches the column gap. */
+    .story__prose > :global(p:has(> img:only-child)) {
+      grid-column: auto;
+      margin-block: calc(var(--space-md) / 2);
+    }
+  }
+
+  /*
+   * One shape for every tile, whichever way the phone was held. The crop sits
+   * high because these are all people standing in front of a poster — centred,
+   * it takes their heads off.
+   */
+  .story__prose :global(p:has(> img:only-child) > img) {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    object-position: center 30%;
+    margin: 0;
+  }
+
 </style>

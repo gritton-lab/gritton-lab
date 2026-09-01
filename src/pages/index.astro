@@ -31,8 +31,11 @@ const introBreak = home.intro.indexOf('However');
 const introLead = introBreak > 0 ? home.intro.slice(0, introBreak).trim() : home.intro;
 const introDetail = introBreak > 0 ? home.intro.slice(introBreak).trim() : '';
 
-const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+// A story known only to a month (no specific day) drops the day here too.
+const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
+  precision === 'month'
+    ? date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 ---
 
 <Base description={home.heroSubtext}>
@@ -196,11 +199,12 @@ const formatDate = (date: Date) =>
           latestNews.map((story) => (
             <Card
               href={`/news/${story.id}`}
-              eyebrow={formatDate(story.data.date)}
+              eyebrow={formatDate(story.data.date, story.data.datePrecision)}
               title={story.data.title}
               summary={story.data.summary}
               image={story.data.image}
               imageAlt={story.data.imageAlt}
+              category={story.data.category}
               footLabel="Read story"
             />
           ))

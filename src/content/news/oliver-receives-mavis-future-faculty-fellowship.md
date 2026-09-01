@@ -1,6 +1,7 @@
 ---
 title: Oliver receives Mavis Future Faculty Fellowship
 date: 2024-04-30
+category: award
 summary: Oliver was named a Mavis Future Faculty Fellow for 2024 by the College of Engineering.
 ---
 
