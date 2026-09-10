@@ -1,32 +1,4 @@
 ---
-/**
- * The photo timeline that fills the News masthead.
- *
- * The News hero carried a title, a lede, and three figures, which left the
- * middle of the block empty. This puts the lab's own pictures there instead:
- * a picture on the left, the story it belongs to on the right, and a dated
- * axis under both.
- *
- * The picture is deliberately letterboxed. It has to sit in the gap that was
- * already there without pushing the news grid off the screen, so it is a band
- * rather than a picture box.
- *
- * The right-hand column replaced the run of figures that used to sit there —
- * story count, page range, years covered. Those were three numbers that never
- * changed and told a reader nothing about the news; the same space now says
- * what the picture beside it actually is, and turns over with it.
- *
- * Controls are the three the reel needs — back, stop, forward. Any manual move
- * stops playback, because a picture that slides away while someone is reading
- * about it is worse than one that sits still.
- *
- * Used only by the News index; items arrive newest-first and pre-formatted, so
- * the axis reads left to right in the same order as the cards below it.
- *
- * A story without a photo shows the same colored category panel Card uses
- * for its own empty state (`../lib/newsCategories`) rather than a plain
- * hatch, so the picture slot is never just blank stripes.
- */
 import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_STYLE, type NewsCategory } from '../lib/newsCategories';
 
 interface Item {
@@ -59,12 +31,6 @@ interface Props {
 const { items, interval = 5200, perBatch = 5 } = Astro.props;
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/*
- * The axis shows a handful of dates at a time, not the whole archive. Twenty
- * nodes across one column is a ruler, not a timeline: the labels collide and
- * nothing is readable. Reaching the end of a batch turns it over to the next
- * five, so the spacing never changes and the counter carries the whole run.
- */
 const per = Math.min(perBatch, items.length);
 ---
 
@@ -125,12 +91,6 @@ const per = Math.min(perBatch, items.length);
           ))}
         </div>
 
-        {/*
-          Every story is rendered and stacked in one grid cell rather than
-          swapped in by script: the column then stands as tall as its longest
-          entry from first paint, so turning the reel never reflows the page
-          under the reader's cursor.
-        */}
         <div class="reel__briefs">
           {items.map((item, i) => (
             <div
@@ -218,9 +178,7 @@ const per = Math.min(perBatch, items.length);
     min-width: 0;
   }
 
-  /* ------------------------------------------------------------------
-   * Picture and story, side by side
-   * ---------------------------------------------------------------- */
+  /* Picture and story, side by side */
 
   .reel__top {
     display: grid;
@@ -235,10 +193,6 @@ const per = Math.min(perBatch, items.length);
     }
   }
 
-  /*
-   * A band, not a picture box: it has to fit the gap that was already in the
-   * masthead without displacing the news grid below.
-   */
   .reel__stage {
     position: relative;
     aspect-ratio: 29 / 10;
@@ -281,14 +235,6 @@ const per = Math.min(perBatch, items.length);
     background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
   }
 
-  /*
-   * A categorized story gets Card's own colored panel instead of the plain
-   * hatch — same gradient, same oversized ghost icon and corner tag
-   * (`.card__placeholder-ghost`/`.card__placeholder-tag`, global.css), just
-   * filling this wider letterboxed frame instead of a grid tile. A locally
-   * scoped class carries the background so it doesn't have to out-specificity
-   * `.reel__hatch`'s own.
-   */
   .reel__hatch--tinted {
     background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
   }
@@ -298,12 +244,7 @@ const per = Math.min(perBatch, items.length);
     outline-offset: 3px;
   }
 
-  /* ------------------------------------------------------------------
-   * The story beside the picture
-   *
-   * Every entry occupies the same grid cell, so the column is as tall as its
-   * longest entry and nothing below it moves as the reel turns.
-   * ---------------------------------------------------------------- */
+  /* Stack entries in one grid cell to reserve the tallest story height. */
 
   .reel__briefs { display: grid; }
 
@@ -374,9 +315,7 @@ const per = Math.min(perBatch, items.length);
     outline-offset: 3px;
   }
 
-  /* ------------------------------------------------------------------
-   * Counter and controls
-   * ---------------------------------------------------------------- */
+  /* Counter and controls */
 
   .reel__bar {
     display: flex;
@@ -438,13 +377,7 @@ const per = Math.min(perBatch, items.length);
   .reel__btn[data-toggle][aria-pressed='false'] .reel__icon-stop { display: none; }
   .reel__btn[data-toggle][aria-pressed='false'] .reel__icon-play { display: block; }
 
-  /* ------------------------------------------------------------------
-   * The axis
-   *
-   * One node per story, evenly spaced, newest on the left so it runs in the
-   * same order as the cards below. The run line creeps between nodes while the
-   * reel plays, which is the only thing marking time.
-   * ---------------------------------------------------------------- */
+  /* The axis */
 
   .reel__axis {
     position: relative;
@@ -453,11 +386,6 @@ const per = Math.min(perBatch, items.length);
     transition: opacity 180ms ease;
   }
 
-  /*
-   * The axis blinks out and back when it turns over to the next five dates.
-   * Sliding the old batch off would race the picture sliding underneath it;
-   * a fade says "different stretch of the timeline" without competing.
-   */
   .reel__axis.is-turning { opacity: 0; }
 
   .reel__rail {
@@ -591,9 +519,6 @@ const per = Math.min(perBatch, items.length);
     let last: number | null = null;
     let turning: number | undefined;
 
-    /* The run line sits between nodes while a frame holds, so it reads as time
-     * passing rather than as a step that already happened. It measures the
-     * current batch, not the whole archive — the counter carries that. */
     const paint = () => {
       const creep = playing ? Math.min(elapsed / interval, 1) : 0;
       run.style.setProperty('--run', String((index % per) + creep));
@@ -606,12 +531,7 @@ const per = Math.min(perBatch, items.length);
       });
     };
 
-    /*
-     * Turning the axis over is one fade out, one swap, one fade in. The swap
-     * has to wait for the fade, so it runs on a timer rather than a
-     * transitionend — a batch change interrupted by a fast click would
-     * otherwise leave the axis stranded at zero opacity.
-     */
+    /* Use a timer so interrupted transitions cannot leave the axis hidden. */
     const turnTo = (next: number) => {
       if (next === batch) return;
       batch = next;

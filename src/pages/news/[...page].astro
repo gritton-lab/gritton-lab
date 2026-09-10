@@ -30,16 +30,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
     ? date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
     : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
-/*
- * Where the faces are, as a percentage down each photograph.
- *
- * The reel frame is a wide band, so it shows roughly the middle third of a
- * 4:3 photo and a centred crop beheads people. These are measured off the
- * files: the value is the `object-position` that lands the faces in the upper
- * half of the band, clear of the caption. A story that is not listed falls
- * back to 42%, which suits the usual group shot; add a line here if a new
- * photograph crops badly.
- */
+/* Per-story object-position values keep faces above the reel caption. */
 const FACES: Record<string, string> = {
   'martin-presents-work-on-spatial-attention-at-cns': '51%',
   'meeting-temple-grandin': '21%',
@@ -48,12 +39,6 @@ const FACES: Record<string, string> = {
   'undergrads-present-posters-at-2024-isur-and-urs-expos': '26%',
 };
 
-/*
- * The masthead reel runs every story in the collection, not just this page of
- * it, newest first so its axis reads in the same order as the cards below.
- * Stories filed without a photograph keep their place and show a hatch, so the
- * axis is a record of the news rather than a record of the photography.
- */
 const reelItems = (await getCollection('news', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .map((post) => ({
@@ -130,7 +115,6 @@ const reelItems = (await getCollection('news', ({ data }) => !data.draft))
       }
     </div>
   </section>
-
 
   <CtaBand
     eyebrow="Elsewhere"

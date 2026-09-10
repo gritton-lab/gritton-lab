@@ -10,11 +10,6 @@ import home from '../../data/home.json';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 
-/*
- * Methods are listed per project so every card carries the same three pieces
- * of information — title, summary, methods — instead of some cards running to
- * twice the height of their neighbours.
- */
 const methodsBySlug: Record<string, string[]> = {
   'oscillations-in-circuit-function': ['Cell-type recording', 'Spectral analysis', 'Disease models'],
   'perceptual-encoding-in-complex-auditory-scenes': ['Electrophysiology', 'Optogenetics', 'Machine learning'],
@@ -66,7 +61,6 @@ const methodsBySlug: Record<string, string[]> = {
       </div>
     </div>
   </section>
-
 
   <FigureBand
     image="/images/uploads/oliver-ear-day-2024.jpg"

@@ -2,14 +2,7 @@ import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { NEWS_CATEGORIES } from './lib/newsCategories';
 
-/**
- * Every field here is editable from the CMS at /admin.
- *
- * Image fields are plain strings holding a site-root path such as
- * `/images/uploads/oliver-qu.jpeg`, not Astro `image()` assets: the CMS media
- * library lives in `public/images/uploads`, and editors must be able to upload
- * a photo and pick it without touching code.
- */
+// Image URLs point to files in public/.
 
 const team = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/team' }),
@@ -52,16 +45,9 @@ const news = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.date(),
-    // Some stories only happened "sometime in a month" rather than on a known
-    // day; `date` still needs a real day to sort by, so this just tells every
-    // page that formats the date to drop the day and show month + year.
+    // Keep a sortable date while displaying only the known precision.
     datePrecision: z.enum(['day', 'month']).default('day'),
-    // Most stories run without a photo, and Card's fallback for a missing
-    // image is a plain hatched box — fine occasionally, but identical across
-    // a whole grid of undocumented stories. This gives that box something to
-    // say instead: a category label and icon, so a row of image-less cards
-    // still reads as distinct stories. Optional because a photographed story
-    // never shows it.
+    // Select the fallback label and icon for stories without a photo.
     category: z.enum(NEWS_CATEGORIES).optional(),
     summary: z.string().optional(),
     image: z.string().optional(),
@@ -82,9 +68,5 @@ const projects = defineCollection({
     order: z.number().default(99),
   }),
 });
-
-// Fixed page content (home hero, positions, contact, site settings) lives in
-// `src/data/*.json` and is imported directly by the pages that use it; the CMS
-// edits those as a "file collection".
 
 export const collections = { team, publications, news, projects };

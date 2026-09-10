@@ -1,30 +1,29 @@
-# build output
+# Build output and dependencies
 dist/
-# generated types
 .astro/
-
-# dependencies
 node_modules/
 
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-
-# environment variables
+# Local environment and logs
 .env
-.env.production
+.env.*
+!.env.example
+*.log
 
-# macOS-specific files
+# Local tools and editor settings
 .DS_Store
-
-# jetbrains setting folder
 .idea/
-
-# internal project brief — not for the public repo
-docs/PROJECT_CONTEXT.md
-
-# playwright-mcp debug artifacts
+.vscode/
+.claude/
+.codex/
+.mcp.json
+AGENTS.md
+CLAUDE.md
 .playwright-mcp/
+playwright-report/
+test-results/
+
+# Source documents and working notes
+/docs/
+/news uploads/
+/people updates/
+*.docx

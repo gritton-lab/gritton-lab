@@ -39,12 +39,6 @@ const open = positions.positions.filter((position) => position.open);
         intro="Each listing describes who we are looking for and exactly what to send."
       />
 
-      {/*
-        Positions are the one place on the site where the content is genuinely
-        long-form, so they use a two-column row — description on the left, the
-        application instructions boxed on the right — rather than a card. Every
-        row has the same shape whatever the length of the text.
-      */}
       <div class="section-body positions">
         {
           positions.positions.map((position, index) => (
@@ -79,7 +73,6 @@ const open = positions.positions.filter((position) => position.open);
       </div>
     </div>
   </section>
-
 
   <FigureBand
     image="/images/uploads/martin-cns.jpeg"

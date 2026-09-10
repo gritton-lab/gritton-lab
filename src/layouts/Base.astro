@@ -26,11 +26,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content="#ffffff" />
 
-    {/*
-      DM Sans (display + body) and DM Mono (labels).
-      `display=swap` keeps the fallback stack visible while these load, so
-      first paint never waits on the network.
-    */}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

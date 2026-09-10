@@ -127,11 +127,6 @@ const isActive = (href: string) => pathname === href || pathname.startsWith(`${h
 </script>
 
 <style>
-  /*
-   * The header keeps its hairline: it is sticky, so without one the nav would
-   * float over identically-coloured page content with no edge at all. This is
-   * the only horizontal rule the page shell draws.
-   */
   .site-header {
     position: sticky;
     z-index: 80;
@@ -156,11 +151,7 @@ const isActive = (href: string) => pathname === href || pathname.startsWith(`${h
     gap: clamp(0.55rem, 1.1vw, 0.85rem);
   }
 
-  /*
-   * The Block I is a licensed institutional mark. It always uses the official
-   * Illinois Blue and Illinois Orange — never the site palette tokens — so it
-   * stays correct no matter how a page retints itself.
-   */
+  /* Keep the Block I in official Illinois colors, independent of theme tokens. */
   .illinois-mark {
     display: grid;
     width: 2.75rem;

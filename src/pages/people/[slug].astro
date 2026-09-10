@@ -94,10 +94,7 @@ export const getStaticPaths = (async () => {
     .sort((a, b) => a.data.order - b.data.order)
     .map((person) => {
       const identity = identities.get(person.id)!;
-      // Undergraduates are matched on a first-initial alone, which is loose
-      // enough to catch an unrelated "Kim S" or "Wu T" in a long author list.
-      // They rarely carry indexed first-author work, so skip the section for
-      // them rather than surface a wrong paper.
+      // Skip undergraduates to avoid matching unrelated authors by surname and initial.
       const publicationMatchesForPerson = (person.data.group === 'undergrad' ? [] : publications)
         .filter((publication) => publicationMatches(publication, identity))
         .sort((a, b) => {

@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Gritton Lab">
-  <rect width="128" height="128" rx="20" fill="#13294b"/>
-  <path d="M92 37 108 22M95 64h20M91 89l17 16" stroke="#46c5e5" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="109" cy="21" r="7" fill="#ff5f05"/>
-  <circle cx="116" cy="64" r="7" fill="#ff5f05"/>
-  <circle cx="109" cy="106" r="7" fill="#ff5f05"/>
-  <text x="17" y="94" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="700">G</text>
-</svg>

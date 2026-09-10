@@ -1,9 +1,6 @@
 ---
 import settings from '../data/settings.json';
 
-// Site-wide notice, toggled from the CMS. This is the "popup" mechanism:
-// deliberately a dismissible bar rather than a modal, so a mistaken edit can
-// never block the site.
 const a = settings.announcement;
 const show = a.enabled && a.text.trim().length > 0;
 ---
@@ -22,10 +19,6 @@ const show = a.enabled && a.text.trim().length > 0;
 }
 
 <style>
-  /*
-   * Styled from the design tokens rather than Tailwind colour utilities, so
-   * the bar cannot silently lose its colours when the palette is edited.
-   */
   .announcement {
     background: var(--ink-deep);
     color: #fff;

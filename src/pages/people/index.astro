@@ -10,16 +10,6 @@ const team = (await getCollection('team')).sort(
   (a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name),
 );
 
-/*
- * One section per group, always in this order, always rendered with the same
- * card. Empty groups drop out so a heading is never left standing over
- * nothing.
- */
-/*
- * The PI is rendered as a featured block rather than a card. A single card in
- * a four-column grid left three quarters of the row empty, which read as a
- * layout bug rather than a deliberate emphasis.
- */
 const pi = team.find((person) => person.data.group === 'pi');
 
 const groups = [

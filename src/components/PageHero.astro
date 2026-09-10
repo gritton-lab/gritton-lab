@@ -1,17 +1,5 @@
 ---
-/**
- * The masthead for every interior page.
- *
- * Every page opens with exactly this block, in exactly this order — eyebrow,
- * title, lede, actions, then an optional strip of figures — with identical
- * padding above and below. That repetition is the point: a visitor should be
- * able to tell where the title, the summary, and the entry links are on any
- * page without looking for them.
- *
- * Slot `meta` renders after the actions for pages that need something extra
- * (an external bibliography link, a filter row) without inventing a new
- * masthead shape.
- */
+/** Interior page header; the meta slot follows the actions. */
 interface Props {
   eyebrow: string;
   title: string;
@@ -75,14 +63,6 @@ const hasStats = stats.length > 0;
   .page-hero__text { min-width: 0; }
   .page-hero__actions { margin-top: var(--space-lg); }
 
-  /*
-   * Figures sit in a right-hand column on wide screens but never stretch the
-   * lede: the text column keeps its own measure either way.
-   */
-  /*
-   * No rules. Three figures do not need a table drawn around them, and on the
-   * hero these would have been the only lines on the page besides the header.
-   */
   .page-hero__stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
@@ -121,11 +101,6 @@ const hasStats = stats.length > 0;
       gap: var(--space-block);
     }
 
-    /*
-     * Stacked, not a label/value row. Values like an email address or a
-     * department name are long enough to wrap mid-word against a right-aligned
-     * column, which looked broken on the People and Positions pages.
-     */
     .page-hero__body.has-stats .page-hero__stats {
       margin-top: 0;
       grid-template-columns: minmax(0, 1fr);

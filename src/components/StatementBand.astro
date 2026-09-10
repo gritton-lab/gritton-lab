@@ -1,16 +1,4 @@
 ---
-/**
- * A full-bleed dark block carrying one statement.
- *
- * The second of the two devices that divide a page — the other is FigureBand.
- * Both run edge to edge and both carry content; neither draws a rule or tints
- * a background just to signal "new section".
- *
- * It reuses the same dark surface as the hero and the closing block, so a
- * statement reads as part of the existing design rather than as a new
- * decoration bolted on. Used on text-heavy pages, where there is no photograph
- * to break the run of prose.
- */
 interface Props {
   eyebrow?: string;
   statement: string;
@@ -58,10 +46,6 @@ const { eyebrow, statement, stats = [] } = Astro.props;
     text-transform: uppercase;
   }
 
-  /*
-   * Sized between the page h1 and h2 — large enough to land as the moment it
-   * is, without competing with the page title.
-   */
   .statement-band__text {
     max-width: 30ch;
     color: #fff;

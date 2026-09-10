@@ -1,17 +1,5 @@
 ---
-/**
- * A full-bleed photographic band, used to break up long pages.
- *
- * This is the page's punctuation. It runs edge to edge, carries a caption over
- * the image, and replaces the two devices that were doing this job badly
- * before: a hairline rule above every heading, and alternating grey bands.
- * Unlike either of those, a band here always carries real content.
- *
- * Deliberately PHOTOGRAPHS only. The lab's scientific figures are labelled
- * multi-panel diagrams on white — an edge-to-edge cover crop would slice off
- * their axis labels, scale bars, and legends. Those stay contained inside
- * cards, where they stay legible.
- */
+/** Photograph band. Scientific figures belong in uncropped cards. */
 interface Props {
   image: string;
   alt: string;
@@ -47,8 +35,6 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
   .figure-band {
     position: relative;
     display: flex;
-    /* The floor is set by the caption, not the picture: below about 17rem the
-       label and caption crowd each other on a narrow screen. */
     height: clamp(17rem, 30vw, 22rem);
     align-items: flex-end;
     overflow: hidden;
@@ -63,21 +49,9 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* Desaturated slightly so candid photography sits with the palette
-       instead of competing with the accent blue. */
     filter: saturate(0.72) contrast(1.04);
   }
 
-  /*
-   * A wash weighted to the bottom, so the caption always has contrast to sit
-   * on regardless of what is behind it in the photograph.
-   */
-  /*
-   * Weighted hard to the bottom. These are candid photographs with unpredictable
-   * exposure — a pale floor or a lit poster board sits directly behind the
-   * caption on some of them — so the wash has to guarantee contrast rather than
-   * assume a dark subject.
-   */
   .figure-band__wash {
     position: absolute;
     inset: 0;

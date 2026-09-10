@@ -8,10 +8,6 @@ import CtaBand from '../../components/CtaBand.astro';
 
 type ProjectFrame = { label: string; value: string };
 
-/*
- * Framing metadata per project. Every project renders the same three-row
- * table, so the sidebar is identical in shape from one project to the next.
- */
 const projectFrames: Record<string, ProjectFrame[]> = {
   'oscillations-in-circuit-function': [
     { label: 'Research focus', value: 'Neural rhythms and circuit coupling' },

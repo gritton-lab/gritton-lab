@@ -6,11 +6,7 @@ interface Props {
 
 const { url, title = 'Embedded video' } = Astro.props;
 
-/**
- * Turn a YouTube or Vimeo page URL into its embed URL, so an editor can paste
- * the link straight from the browser address bar and still get a working player.
- * Returns null for anything we don't recognize, and we render a plain link.
- */
+/** Return an embed URL, or null for the plain-link fallback. */
 function toEmbedUrl(raw: string): string | null {
   let u: URL;
   try {
@@ -64,8 +60,6 @@ const embed = toEmbedUrl(url);
 }
 
 <style>
-  /* Styled from the design tokens, matching the figure treatment on the
-     project and news pages rather than its own rounded-corner variant. */
   .video-embed {
     aspect-ratio: 16 / 9;
     overflow: hidden;

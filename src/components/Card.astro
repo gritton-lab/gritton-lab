@@ -1,27 +1,5 @@
 ---
-/**
- * The one card on the site.
- *
- * Projects, people, and news all render through this component so that a row
- * of cards on any page has the same media ratio, the same internal padding,
- * the same title size, and a footer pinned to the bottom edge. Cards in a row
- * are always equal height and their footers always align, whatever the length
- * of the summary.
- *
- * `media` picks how the image is treated:
- *   photo   — cover crop, for photographs
- *   figure  — contained and padded on white, for scientific figures
- *   portrait— taller 4:5 crop anchored to the top, for headshots
- *
- * When `image` is absent a hatched placeholder of the correct ratio is drawn,
- * so a missing photo never changes the height of its row. News is the one
- * collection where that is common rather than occasional, so an optional
- * `category` swaps the placeholder for a colored panel naming the kind of
- * story instead — a row of undocumented news reads as distinct, deliberate
- * cards rather than the same gray block repeated. Colors and icons come from
- * `../lib/newsCategories`, shared with NewsReel's masthead slides so a story
- * looks the same whichever spot on the page shows it without a photo.
- */
+/** Media: cover-cropped photos, contained figures, or top-aligned 4:5 portraits. */
 import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_STYLE, type NewsCategory } from '../lib/newsCategories';
 
 interface Props {

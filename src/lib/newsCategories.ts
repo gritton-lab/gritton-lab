@@ -1,16 +1,3 @@
-/**
- * Shared definition for news story categories — used to give a photo-less
- * story a placeholder that says something (Card's grid tile and NewsReel's
- * masthead slide both need it), and by the content schema so a post can only
- * declare a category this file actually knows how to draw.
- *
- * One accent per category, walked in the dataviz skill's validated adjacent
- * categorical order (blue, orange, aqua, yellow, magenta, green) — checked
- * with the skill's validate_palette.js: CVD separation and the normal-vision
- * floor both pass. Every use pairs the color with an icon and a permanent,
- * always-visible text label — color is never the only signal.
- */
-
 export const NEWS_CATEGORIES = [
   'presentation',
   'visit',
@@ -31,10 +18,7 @@ export const CATEGORY_LABEL: Record<NewsCategory, string> = {
   grant: 'Grant',
 };
 
-// One line-icon per category, in the site's existing stroke style (24x24,
-// no fill) — a mic for a talk, a map pin for a visit, a checkmark for a
-// milestone, a medal for an award, a person-plus for a new arrival, a
-// briefcase for a grant.
+// SVG paths use a 24x24 viewBox, a stroke, and no fill.
 export const CATEGORY_ICON: Record<NewsCategory, string> = {
   presentation:
     '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
@@ -49,10 +33,7 @@ export const CATEGORY_ICON: Record<NewsCategory, string> = {
     '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
 };
 
-// A diagonal gradient per category — vivid near-white-lifted stop to a deep,
-// ink-mixed stop — for the panel a photo-less story shows instead of a photo.
-// White text and icon always sit on top of these, so contrast is guaranteed
-// by the dark stop and the chip's own scrim, not recomputed per hue.
+// Gradients for category panels; labels sit on a dark overlay.
 export const CATEGORY_STYLE: Record<NewsCategory, { from: string; to: string }> = {
   presentation: { from: '#3b83d9', to: '#1b3f6f' },
   visit: { from: '#ed7444', to: '#713826' },

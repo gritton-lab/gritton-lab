@@ -10,12 +10,6 @@ const publications = (await getCollection('publications')).sort(
   (a, b) => b.data.year - a.data.year || a.data.order - b.data.order,
 );
 
-/*
- * The whole archive is rendered as one continuous list grouped by year, rather
- * than hidden behind year tabs. A bibliography is something you scan and
- * search in the browser; paging it into eight separate panels only made three
- * papers visible at a time.
- */
 const years = [...new Set(publications.map((publication) => publication.data.year))].sort((a, b) => b - a);
 
 const groups = years.map((year) => ({
@@ -127,7 +121,6 @@ const span = years.length ? `${years.at(-1)}–${years[0]}` : '—';
       </div>
     </div>
   </section>
-
 
   <CtaBand
     eyebrow="Behind the papers"

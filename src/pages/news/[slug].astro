@@ -126,25 +126,9 @@ const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
 </Base>
 
 <style>
-  /*
-   * A lab news item is usually two or three sentences. The page used to open
-   * with the summary, then repeat it almost verbatim as the first line of the
-   * story, then set the photograph in its own centred column that lined up
-   * with nothing above it — three sentences spread over a screen and a half of
-   * white space.
-   *
-   * So: no summary paragraph (the story's own opening is the summary, and
-   * `description` still carries it to search results and link previews), the
-   * date, headline and story in one column against one left edge, and the
-   * photograph beside them in space the masthead was wasting anyway.
-   */
 
   .story { background: var(--paper-bright); }
 
-  /*
-   * Light on the bottom: the "More news" section below brings its own section
-   * padding, and doubling the two left a short story marooned in white.
-   */
   .story .container-page {
     padding-block: clamp(1.5rem, 2.6vw, 2.25rem) clamp(0.75rem, 1.4vw, 1.25rem);
   }
@@ -157,23 +141,10 @@ const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
     margin: 0;
   }
 
-  /*
-   * Stacked on a phone the source order is what a reader wants: headline,
-   * photograph, story.
-   */
   .story__body { display: grid; gap: var(--space-lg); }
 
   @media (min-width: 900px) {
-    /*
-     * On a wide screen the photograph steps out into a reserved column and the
-     * story closes up under the headline.
-     *
-     * It is taken out of flow rather than given a grid track: as a grid item
-     * spanning the headline and story rows it inflated them, which put a
-     * screen of white between the headline and its own first sentence — the
-     * gap this page was rebuilt to remove. `min-height` keeps a one-sentence
-     * story from ending above the bottom of its own photograph.
-     */
+    /* Absolute positioning prevents the photo from stretching headline and story rows. */
     .story.has-figure .story__body {
       position: relative;
       display: block;
@@ -213,20 +184,6 @@ const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
     padding-top: 0.6rem;
   }
 
-  /*
-   * Pictures inside the story body.
-   *
-   * These are pasted into the markdown one per paragraph, and a story like the
-   * undergraduate symposium round-up carries four of them in a run. Left to
-   * themselves they stacked down the left edge at four different sizes —
-   * portrait, portrait, landscape, landscape — a ragged staircase with the
-   * right half of the page empty.
-   *
-   * So the story column becomes a two-track grid: prose spans both tracks and
-   * reads as normal, while a picture-only paragraph takes a single track. Runs
-   * of photographs fall into a tidy gallery, and a lone photograph still sits
-   * at a sensible size instead of filling the measure.
-   */
   .story__prose {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -246,11 +203,6 @@ const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
     }
   }
 
-  /*
-   * One shape for every tile, whichever way the phone was held. The crop sits
-   * high because these are all people standing in front of a poster — centred,
-   * it takes their heads off.
-   */
   .story__prose :global(p:has(> img:only-child) > img) {
     width: 100%;
     aspect-ratio: 4 / 3;

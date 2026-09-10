@@ -1,21 +1,5 @@
 @import "tailwindcss";
 
-/**
- * Gritton Lab — design system
- *
- * The governing rule of this rebuild: THERE IS ONE LEFT RAIL. Every eyebrow,
- * heading, paragraph, card, row, and rule on every page begins at the same x
- * position, set by `.container-page`. Nothing is centred, nothing is indented
- * to a different column than the content it introduces. The previous build
- * placed section titles at grid column 5 while their own content started at
- * column 1, which is what made each page read as a set of unrelated blocks
- * floating in whitespace.
- *
- * Colour is unchanged from the previous build — cool slate for the dark bands
- * and imagery, white and pale slate for reading surfaces, one calm blue as the
- * accent. The Illinois Block I in the header is deliberately NOT tokenised; it
- * keeps its official blue and orange regardless of this palette.
- */
 @theme {
   --color-ink: #1b1f2a;
   --color-ink-deep: #0e111a;
@@ -52,26 +36,10 @@
 
   --header-height: 4.75rem;
 
-  /*
-   * The measure. `--rail` is the page gutter and `--measure` the content width;
-   * every container derives from these two numbers so the left rail cannot
-   * drift between components.
-   */
+  /* Shared page gutter and maximum content width. */
   --rail: clamp(1.25rem, 5vw, 4rem);
   --measure: 74rem;
 
-  /*
-   * One vertical rhythm. Sections use --space-section, the gap between a
-   * section heading and its content uses --space-block, and everything smaller
-   * steps down from there. Pages do not invent their own intervals.
-   *
-   * Space is the ONLY thing separating one section from the next — there are
-   * no rules above headings and no alternating background bands — so the
-   * interval has to read as a break on its own. Note it applies to BOTH edges
-   * of a section, so the visible gap between two sections is twice this: about
-   * 8.5rem on a desktop. Set much higher and short sections read as gaps in
-   * the page rather than as breathing room.
-   */
   --space-section: clamp(2.75rem, 4.5vw, 4.25rem);
   --space-block: clamp(2rem, 3.4vw, 3rem);
   --space-lg: clamp(1.5rem, 2.4vw, 2.25rem);
@@ -110,12 +78,6 @@
     line-height: 1.65;
   }
 
-  /*
-   * A restrained type scale. The previous build topped out near 4.6rem, which
-   * forced two- and three-word orphan lines and made every heading feel like a
-   * poster. Headings here stay large enough to lead but small enough that a
-   * full sentence fits on one or two lines.
-   */
   h1,
   h2,
   h3,
@@ -182,9 +144,7 @@
 }
 
 @layer components {
-  /* ------------------------------------------------------------------
-   * The rail
-   * ---------------------------------------------------------------- */
+  /* The rail */
 
   .container-page {
     width: 100%;
@@ -193,19 +153,9 @@
     padding-inline: var(--rail);
   }
 
-  /*
-   * A reading column, for long-form prose only. It is left-aligned on the same
-   * rail — it is narrower, never centred, so the left edge never moves.
-   */
   .container-page--narrow { max-width: calc(56rem + var(--rail) * 2); }
   .container-page--wide { max-width: calc(84rem + var(--rail) * 2); }
 
-  /*
-   * A 12-column grid for the few genuinely two-column layouts. The label
-   * column and the main column are ADJACENT — there is no empty gutter column
-   * between them, which is what previously opened a void down the middle of
-   * every page.
-   */
   .grid-12 {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -229,22 +179,13 @@
     .col-inset { grid-column: 1 / span 8; }
   }
 
-  /* ------------------------------------------------------------------
-   * Sections
-   * ---------------------------------------------------------------- */
+  /* Sections */
 
   .page-section { padding-block: var(--space-section); }
 
   /* A masthead and the first section below it are one block, not two. */
   .page-hero + .page-section { padding-top: 0; }
 
-  /*
-   * The page is one continuous white surface. There are no alternating light
-   * and grey bands: striping a page with background colour turned every scroll
-   * into a series of unrelated slabs, and the tint never carried meaning — it
-   * only alternated. The dark band survives because it does carry meaning: it
-   * marks the hero and the single closing call to action, and nothing else.
-   */
   .page-section--dark {
     background: var(--ink-deep);
     color: rgba(255, 255, 255, 0.72);
@@ -258,9 +199,7 @@
   /* The one standard gap between a section heading and its content. */
   .section-body { margin-top: var(--space-block); }
 
-  /* ------------------------------------------------------------------
-   * Text primitives
-   * ---------------------------------------------------------------- */
+  /* Text primitives */
 
   .eyebrow {
     display: block;
@@ -277,11 +216,6 @@
   .eyebrow--light { color: var(--sky); }
   .page-section--dark .eyebrow { color: var(--sky); }
 
-  /*
-   * The standard supporting paragraph. One size, one measure, everywhere —
-   * the previous build ran ledes anywhere from 13px to 21px depending on the
-   * page, which is a large part of why the site read as unfinished.
-   */
   .lede {
     max-width: 62ch;
     color: var(--ink-soft);
@@ -318,9 +252,7 @@
     text-transform: uppercase;
   }
 
-  /* ------------------------------------------------------------------
-   * Buttons and links
-   * ---------------------------------------------------------------- */
+  /* Buttons and links */
 
   .button,
   .btn {
@@ -385,11 +317,6 @@
     color: var(--ink);
   }
 
-  /*
-   * The inline "read more" link. Mono, uppercase, underlined — used for every
-   * secondary navigation cue on the site so they are all recognisably one
-   * thing.
-   */
   .text-link,
   .arrow-link {
     display: inline-flex;
@@ -449,14 +376,7 @@
     gap: var(--space-sm) var(--space-md);
   }
 
-  /* ------------------------------------------------------------------
-   * Grids
-   *
-   * All card grids use the same track sizing, so a three-up grid on one page
-   * and a four-up grid on another still share a column width and gutter.
-   * `auto-fill` with a min track keeps a short final row left-aligned and
-   * correctly sized instead of stretching two cards across four columns.
-   * ---------------------------------------------------------------- */
+  /* Grids */
 
   .card-grid {
     display: grid;
@@ -469,13 +389,7 @@
   .card-grid--3 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); }
   .card-grid--4 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
 
-  /* ------------------------------------------------------------------
-   * The card
-   *
-   * One card for the whole site. Fixed media ratio, fixed internal padding,
-   * and a body laid out so that titles across a row start at the same y and
-   * footers sit on the bottom edge regardless of summary length.
-   * ---------------------------------------------------------------- */
+  /* The card */
 
   .card {
     display: flex;
@@ -512,10 +426,6 @@
     transition: transform 300ms ease;
   }
 
-  /*
-   * Scientific figures are diagrams on white, not photographs — they must be
-   * contained and padded or the crop destroys them.
-   */
   .card__media--figure { background: var(--paper-bright); }
   .card__media--figure img {
     object-fit: contain;
@@ -530,18 +440,11 @@
   .card__media--figure img,
   .card:hover .card__media--figure img { transform: none; }
 
-  /*
-   * A placeholder that keeps the grid even when an item has no image. The
-   * previous build dropped in flat dark rectangles of a different height,
-   * which broke every row they appeared in.
-   */
   .card__media--empty {
     position: relative;
     display: grid;
     place-items: center;
     overflow: hidden;
-    /* An uncategorized story — or a project/person, which never hits this
-       state — keeps the original neutral hatch. */
     background:
       repeating-linear-gradient(
         135deg,
@@ -558,21 +461,10 @@
     text-transform: uppercase;
   }
 
-  /*
-   * A categorized story trades the hatch for a full-bleed diagonal wash of
-   * its color (`--cat-from`/`--cat-to`, set in Card.astro) — bold enough to
-   * read as a designed panel, not a fallback. A grid of undocumented stories
-   * reads as distinct, deliberate cards instead of the same gray block
-   * repeated.
-   */
   .card__media--tinted {
     background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
   }
 
-  /*
-   * The category's own icon, oversized and set low-opacity in the corner as
-   * a background motif — the panel's texture, not its message.
-   */
   .card__placeholder-ghost {
     position: absolute;
     right: -8%;
@@ -583,11 +475,6 @@
     pointer-events: none;
   }
 
-  /*
-   * The message itself: a small, high-contrast tag pinned to the corner —
-   * icon plus the category name, in white on a dark scrim so it reads
-   * against any of the six panel colors without per-hue tuning.
-   */
   .card__placeholder-tag {
     position: absolute;
     left: 0.85rem;
@@ -677,16 +564,8 @@
     text-transform: uppercase;
   }
 
-  /* ------------------------------------------------------------------
-   * Ruled lists — publications, positions, roster figures
-   * ---------------------------------------------------------------- */
+  /* Ruled lists — publications, positions, roster figures */
 
-  /*
-   * Row hairlines are kept here because a 25-entry bibliography genuinely
-   * needs them to stay scannable — they do work rather than decorate. They are
-   * deliberately faint, and the list draws no heavy rule at its top: the
-   * heading above it already says where the list begins.
-   */
   .ruled-list {
     border-top: 1px solid var(--line);
   }
@@ -754,10 +633,7 @@
   .page-section--dark .ruled-row__note { color: rgba(255, 255, 255, 0.66); }
   .page-section--dark .ruled-row__index { color: var(--sky); }
 
-
-  /* ------------------------------------------------------------------
-   * Chips / filters
-   * ---------------------------------------------------------------- */
+  /* Chips / filters */
 
   .chip {
     display: inline-flex;
@@ -798,9 +674,7 @@
     gap: 0.5rem;
   }
 
-  /* ------------------------------------------------------------------
-   * Long-form prose
-   * ---------------------------------------------------------------- */
+  /* Long-form prose */
 
   .prose-lab {
     max-width: 68ch;

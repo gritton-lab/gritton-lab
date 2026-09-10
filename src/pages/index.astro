@@ -22,11 +22,7 @@ const featuredProjects = projects.slice(0, 3);
 const recentPublications = publications.slice(0, 5);
 const latestNews = news.slice(0, 3);
 
-/*
- * The intro reads as one long paragraph in the CMS. Splitting it at "However"
- * gives the section a lead sentence and a supporting paragraph without asking
- * an editor to maintain two fields.
- */
+/* Split the shared intro into lead and supporting paragraphs. */
 const introBreak = home.intro.indexOf('However');
 const introLead = introBreak > 0 ? home.intro.slice(0, introBreak).trim() : home.intro;
 const introDetail = introBreak > 0 ? home.intro.slice(introBreak).trim() : '';
@@ -134,7 +130,6 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
       </div>
     </div>
   </section>
-
 
   <FigureBand
     image="/images/uploads/martin-cns.jpeg"
@@ -251,10 +246,6 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
 
   .hero__wash { background: var(--hero-wash); }
 
-  /*
-   * The hero content sits on the same rail as every other page section, so the
-   * headline lines up with the section titles that follow it on scroll.
-   */
   .hero__content {
     position: relative;
     z-index: 2;

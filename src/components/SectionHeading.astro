@@ -1,17 +1,4 @@
 ---
-/**
- * The section header used by every section on every page.
- *
- * Everything starts on the page's left rail: the rule, the eyebrow, the title,
- * and the intro all share one left edge with the content that follows below.
- * The optional action is the only thing that moves — it sits at the far right
- * of the title row on wide screens and drops beneath the intro on narrow ones.
- *
- * The previous version put the eyebrow in columns 1–3 and the title in columns
- * 5–12, so a heading floated in the middle of the page while its own content
- * began at the far left. That is the single change that most affects how the
- * site reads.
- */
 interface Props {
   eyebrow?: string;
   title: string;
@@ -71,20 +58,10 @@ const hasAction = Boolean(actionHref && actionLabel);
 </div>
 
 <style>
-  /*
-   * No rule above the heading. The eyebrow and the section spacing mark
-   * where a section begins; a full-width hairline over
-   * every heading on every page added up to a striped, cluttered surface.
-   */
   .section-heading { position: relative; }
 
   .section-heading .eyebrow { margin-bottom: 0.75rem; }
 
-
-  /*
-   * Title and action share a baseline row. `space-between` only has an effect
-   * once an action exists, so a title on its own is never pushed anywhere.
-   */
   .section-heading__row {
     display: flex;
     flex-wrap: wrap;
@@ -93,10 +70,6 @@ const hasAction = Boolean(actionHref && actionLabel);
     gap: 0.9rem var(--space-lg);
   }
 
-  /*
-   * A measure, not a hard break. Titles read as one or two lines instead of
-   * stacking into three or four words per line.
-   */
   .section-heading__title {
     max-width: 24ch;
     margin: 0;
