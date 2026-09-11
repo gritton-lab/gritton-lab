@@ -2,7 +2,7 @@
 
 @theme {
   --color-ink: #1b1f2a;
-  --color-ink-deep: #0e111a;
+  --color-ink-deep: #13294b;
   --color-ink-soft: #3f4757;
   --color-ink-muted: #667085;
   --color-paper: #f2f3f7;
@@ -22,7 +22,7 @@
 
 :root {
   --ink: #1b1f2a;
-  --ink-deep: #0e111a;
+  --ink-deep: var(--color-ink-deep);
   --ink-soft: #3f4757;
   --ink-muted: #667085;
   --paper: #f2f3f7;
@@ -34,7 +34,8 @@
   --line: rgba(27, 31, 42, 0.13);
   --line-strong: rgba(27, 31, 42, 0.26);
 
-  --header-height: 4.75rem;
+  /* The header scrolls with the page; no fixed-header offset is needed. */
+  --header-height: 0px;
 
   /* Shared page gutter and maximum content width. */
   --rail: clamp(1.25rem, 5vw, 4rem);
@@ -54,8 +55,8 @@
   --shadow-lift: 0 0.6rem 1.5rem rgba(15, 19, 32, 0.09);
 
   --hero-wash:
-    linear-gradient(90deg, rgba(14, 17, 26, 0.93) 0%, rgba(14, 17, 26, 0.74) 45%, rgba(14, 17, 26, 0.34) 100%),
-    linear-gradient(0deg, rgba(14, 17, 26, 0.8), transparent 55%);
+    linear-gradient(90deg, rgba(19, 41, 75, 0.93) 0%, rgba(19, 41, 75, 0.74) 45%, rgba(19, 41, 75, 0.34) 100%),
+    linear-gradient(0deg, rgba(19, 41, 75, 0.8), transparent 55%);
 }
 
 @layer base {
@@ -483,7 +484,7 @@
     align-items: center;
     gap: 0.4rem;
     border: 1px solid rgba(255, 255, 255, 0.32);
-    background: rgba(14, 17, 26, 0.4);
+    background: rgba(19, 41, 75, 0.4);
     padding: 0.32rem 0.55rem;
     color: #fff;
   }

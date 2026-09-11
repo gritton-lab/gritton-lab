@@ -26,6 +26,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content="#ffffff" />
 
+    {/* Official Illinois header, navigation, and footer components. */}
+    <link rel="stylesheet" href="https://cdn.toolkit.illinois.edu/3/toolkit.css" />
+    <script is:inline type="module" src="https://cdn.toolkit.illinois.edu/3/toolkit.js"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

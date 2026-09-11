@@ -3,7 +3,6 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import Card from '../components/Card.astro';
-import CtaBand from '../components/CtaBand.astro';
 import StatementBand from '../components/StatementBand.astro';
 import FigureBand from '../components/FigureBand.astro';
 import home from '../data/home.json';
@@ -208,15 +207,6 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
     </div>
   </section>
 
-  <CtaBand
-    eyebrow="Join the lab"
-    title="Bring your question to the bench."
-    body="We are recruiting postdocs, graduate students, research technicians, and undergraduates."
-    links={[
-      { label: 'See open positions', href: '/lab-positions', primary: true },
-      { label: 'Contact the lab', href: '/contact' },
-    ]}
-  />
 </Base>
 
 <style>

@@ -22,10 +22,8 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
   {
     (label || caption) && (
       <figcaption class="figure-band__caption">
-        <div class="container-page">
-          {label && <p class="figure-band__label">{label}</p>}
-          {caption && <p class="figure-band__text">{caption}</p>}
-        </div>
+        {label && <p class="figure-band__label">{label}</p>}
+        {caption && <p class="figure-band__text">{caption}</p>}
       </figcaption>
     )
   }
@@ -35,6 +33,8 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
   .figure-band {
     position: relative;
     display: flex;
+    width: min(var(--measure), calc(100% - var(--rail) * 2));
+    margin-inline: auto;
     height: clamp(17rem, 30vw, 22rem);
     align-items: flex-end;
     overflow: hidden;
@@ -58,10 +58,10 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
     background:
       linear-gradient(
         0deg,
-        rgba(14, 17, 26, 0.94) 0%,
-        rgba(14, 17, 26, 0.82) 18%,
-        rgba(14, 17, 26, 0.45) 45%,
-        rgba(14, 17, 26, 0.1) 100%
+        rgba(19, 41, 75, 0.94) 0%,
+        rgba(19, 41, 75, 0.82) 18%,
+        rgba(19, 41, 75, 0.45) 45%,
+        rgba(19, 41, 75, 0.1) 100%
       );
   }
 
@@ -69,7 +69,7 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
     position: relative;
     z-index: 2;
     width: 100%;
-    padding-block: clamp(1.25rem, 3vw, 2rem);
+    padding: clamp(1.25rem, 3vw, 2rem);
     color: #fff;
   }
 

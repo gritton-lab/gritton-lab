@@ -33,9 +33,16 @@ const { eyebrow = 'Next', title, body, links } = Astro.props;
 </section>
 
 <style>
+  .cta-band {
+    width: min(var(--measure), calc(100% - var(--rail) * 2));
+    margin-inline: auto;
+    margin-block-end: var(--space-section);
+  }
+
   .cta-band__inner {
     display: grid;
     gap: var(--space-lg);
+    padding-inline: clamp(1.25rem, 3vw, 2rem);
   }
 
   .cta-band .eyebrow { margin-bottom: 0.85rem; }

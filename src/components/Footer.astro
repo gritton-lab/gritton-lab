@@ -1,82 +1,25 @@
----
-const links = [
-  { label: 'About', href: '/about' },
-  { label: 'Projects', href: '/projects' },
-  { label: 'People', href: '/people' },
-  { label: 'Publications', href: '/publications' },
-  { label: 'News', href: '/news' },
-  { label: 'Contact', href: '/contact' },
-];
----
+<ilw-footer id="site-footer">
+  <a slot="cookies-button" href="https://www.vpaa.uillinois.edu/resources/web_privacy">About Cookies</a>
+</ilw-footer>
 
-<footer class="site-footer" id="site-footer">
-  <div class="container-page footer-inner">
-    <p class="footer-copyright">
-      © 2026 Gritton Lab
-      <span aria-hidden="true">·</span>
-      <span>University of Illinois Urbana-Champaign</span>
-    </p>
-
-    <nav aria-label="Footer navigation">
-      <ul class="footer-links">
-        {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
-      </ul>
-    </nav>
-  </div>
-</footer>
+<script>
+  // The Toolkit always renders its unit section. This layout uses only the
+  // university footer, so hide that empty section and its blue top border.
+  await customElements.whenDefined('ilw-footer');
+  const footer = document.querySelector<HTMLElement & { updateComplete: Promise<boolean> }>('#site-footer');
+  if (footer) {
+    await footer.updateComplete;
+    if (footer.shadowRoot) {
+      const style = document.createElement('style');
+      style.textContent = '.site.section-container { display: none; }';
+      footer.shadowRoot.append(style);
+    }
+  }
+</script>
 
 <style>
-  .site-footer {
-    background: var(--ink-deep);
-    color: white;
-  }
-
-  .footer-inner {
-    display: grid;
-    gap: 1.5rem;
-    padding-block: 2rem;
-  }
-
-  .footer-copyright {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    color: rgba(255, 255, 255, 0.58);
-    font-size: 0.72rem;
-    line-height: 1.6;
-  }
-
-  .footer-copyright > span:first-of-type {
-    color: rgba(255, 255, 255, 0.3);
-  }
-
-  .footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem 1.25rem;
-  }
-
-  .footer-links a {
-    color: rgba(255, 255, 255, 0.88);
-    font-size: 0.78rem;
-    font-weight: 600;
-    transition: color 160ms ease;
-  }
-
-  .footer-links a:hover,
-  .footer-links a:focus-visible {
-    color: var(--sky);
-  }
-
-  @media (min-width: 900px) {
-    .footer-inner {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
-      min-height: 7rem;
-    }
-
-    .footer-links {
-      justify-content: flex-end;
-    }
+  ilw-footer {
+    display: block;
+    flex: none;
   }
 </style>
