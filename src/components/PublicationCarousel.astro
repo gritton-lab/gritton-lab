@@ -1,0 +1,93 @@
+<div class="publication-carousel section-body" data-publication-carousel role="group" aria-roledescription="carousel" aria-label="Lab publications">
+  <div class="publication-carousel__viewport">
+    <ol class="ruled-list" data-publication-list aria-live="off"><slot /></ol>
+  </div>
+</div>
+
+<style>
+  .publication-carousel:not(.is-ready) [data-publication-list] > :global(:nth-child(n + 6)) { display: none; }
+
+  .publication-carousel.is-ready .publication-carousel__viewport {
+    height: calc(var(--publication-row-height) * 5 + 1px);
+    overflow: hidden;
+    border-top: 1px solid var(--line);
+  }
+
+  .publication-carousel.is-ready [data-publication-list] { border-top: 0; }
+
+  .publication-carousel.is-ready [data-publication-list] > :global(li) {
+    min-height: var(--publication-row-height);
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-publication-carousel]').forEach((carousel) => {
+    const list = carousel.querySelector<HTMLOListElement>('[data-publication-list]')!;
+    const viewport = carousel.querySelector<HTMLElement>('.publication-carousel__viewport')!;
+    const items = [...list.children] as HTMLElement[];
+    if (items.length <= 5) return;
+
+    const calm = matchMedia('(prefers-reduced-motion: reduce)');
+    let rowHeight = 0;
+    let moving = false;
+    let animation: Animation | undefined;
+
+    const updateAccessibility = () => {
+      [...list.children].forEach((child, index) => {
+        const item = child as HTMLElement;
+        item.inert = index >= 5;
+        if (index >= 5) item.setAttribute('aria-hidden', 'true');
+        else item.removeAttribute('aria-hidden');
+      });
+    };
+
+    const finish = () => {
+      if (!moving) return;
+      moving = false;
+      // Moving the departing row to the end makes the loop seamless.
+      list.append(list.firstElementChild!);
+      animation?.cancel();
+      animation = undefined;
+      updateAccessibility();
+    };
+
+    const advance = () => {
+      if (moving || document.hidden || list.contains(document.activeElement)) return;
+      moving = true;
+      if (calm.matches) { finish(); return; }
+
+      // Keep the departing link out of the tab order while it slides away.
+      const departing = list.firstElementChild as HTMLElement;
+      departing.inert = true;
+      departing.setAttribute('aria-hidden', 'true');
+      animation = list.animate(
+        [{ transform: 'translateY(0)' }, { transform: `translateY(-${rowHeight}px)` }],
+        { duration: 850, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' },
+      );
+      animation.onfinish = finish;
+    };
+
+    const measure = () => {
+      finish();
+      // Equal rows keep exactly five complete entries visible without moving the page below.
+      carousel.style.setProperty('--publication-row-height', '0px');
+      rowHeight = Math.ceil(Math.max(...items.map(item => item.getBoundingClientRect().height)));
+      carousel.style.setProperty('--publication-row-height', `${rowHeight}px`);
+    };
+
+    carousel.classList.add('is-ready');
+    measure();
+    updateAccessibility();
+    window.setInterval(advance, 10000);
+    calm.addEventListener('change', () => { if (calm.matches) finish(); });
+
+    let measuredWidth = 0;
+    new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width !== measuredWidth) {
+        measuredWidth = entry.contentRect.width;
+        measure();
+      }
+    }).observe(viewport);
+    document.fonts.ready.then(measure);
+  });
+</script>

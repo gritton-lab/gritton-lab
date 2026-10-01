@@ -5,6 +5,9 @@ import Base from '../../layouts/Base.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import Card from '../../components/Card.astro';
 import CtaBand from '../../components/CtaBand.astro';
+import SensoryProcessingProject from '../../components/SensoryProcessingProject.astro';
+import AuditoryScenesProject from '../../components/AuditoryScenesProject.astro';
+import ProjectOverview from '../../components/ProjectOverview.astro';
 
 type ProjectFrame = { label: string; value: string };
 
@@ -82,53 +85,19 @@ const frames = projectFrames[project.id] ?? [];
     </div>
   </section>
 
-  <section class="page-section">
-    <div class="container-page">
-      <div class="project-grid">
-        <div class="project-main">
-          {
-            d.image && (
-              <figure class="project-figure">
-                <img src={d.image} alt={d.imageAlt} />
-                {d.imageAlt && <figcaption class="meta">{d.imageAlt}</figcaption>}
-              </figure>
-            )
-          }
-
-          <div class="prose-lab project-prose">
-            <Content />
-          </div>
-        </div>
-
-        <aside class="project-aside">
-          {
-            frames.length > 0 && (
-              <div class="project-card">
-                <p class="meta">At a glance</p>
-                <dl class="project-dl">
-                  {frames.map((frame) => (
-                    <div>
-                      <dt>{frame.label}</dt>
-                      <dd>{frame.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )
-          }
-
-          <div class="project-card">
-            <p class="meta">Related</p>
-            <ul class="project-links">
-              <li><a class="link-underline" href="/publications">Publications from this work</a></li>
-              <li><a class="link-underline" href="/people">The researchers involved</a></li>
-              <li><a class="link-underline" href="/lab-positions">Join this project</a></li>
-            </ul>
-          </div>
-        </aside>
-      </div>
-    </div>
-  </section>
+  {project.id === 'sensory-processing-in-animal-models-of-autism' ? (
+    <SensoryProcessingProject>
+      <Content />
+    </SensoryProcessingProject>
+  ) : project.id === 'perceptual-encoding-in-complex-auditory-scenes' ? (
+    <AuditoryScenesProject>
+      <Content />
+    </AuditoryScenesProject>
+  ) : (
+    <ProjectOverview image={d.image} imageAlt={d.imageAlt} frames={frames}>
+      <Content />
+    </ProjectOverview>
+  )}
 
   {
     others.length > 0 && (
@@ -163,6 +132,7 @@ const frames = projectFrames[project.id] ?? [];
   <CtaBand
     eyebrow="Work with us"
     title="Interested in this line of research?"
+    accent="this line of research?"
     body="We are recruiting postdocs, graduate students, technicians, and undergraduates across every project."
     links={[
       { label: 'Open positions', href: '/lab-positions', primary: true },
@@ -185,78 +155,4 @@ const frames = projectFrames[project.id] ?? [];
   .detail-hero__title { max-width: 20ch; margin: 0; }
   .detail-hero__summary { margin-top: var(--space-md); }
 
-  .project-grid {
-    display: grid;
-    gap: var(--space-block);
-    align-items: start;
-  }
-
-  .project-figure {
-    margin-bottom: var(--space-lg);
-    border: 1px solid var(--line-strong);
-    background: var(--paper-bright);
-    padding: clamp(0.75rem, 2vw, 1.5rem);
-  }
-
-  .project-figure img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  .project-figure figcaption {
-    margin-top: 0.85rem;
-    border-top: 1px solid var(--line);
-    padding-top: 0.7rem;
-  }
-
-  .project-prose { max-width: 66ch; }
-
-  .project-aside {
-    display: grid;
-    gap: var(--space-md);
-  }
-
-  .project-card {
-    border: 1px solid var(--line-strong);
-    background: var(--paper-bright);
-    padding: var(--space-md);
-  }
-
-  .project-card .meta { margin-bottom: 0.85rem; }
-
-  .project-dl { display: grid; }
-
-  .project-dl > div {
-    display: grid;
-    gap: 0.2rem;
-    border-top: 1px solid var(--line);
-    padding-block: 0.7rem;
-  }
-
-  .project-dl > div:first-child { border-top: 0; padding-top: 0; }
-
-  .project-dl dt {
-    color: var(--ink-muted);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .project-dl dd {
-    color: var(--ink);
-    font-size: 0.92rem;
-    line-height: 1.55;
-  }
-
-  .project-links {
-    display: grid;
-    gap: 0.5rem;
-    font-size: 0.92rem;
-  }
-
-  @media (min-width: 900px) {
-    .project-grid { grid-template-columns: minmax(0, 1fr) minmax(16rem, 21rem); }
-  }
 </style>

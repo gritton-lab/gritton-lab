@@ -4,41 +4,48 @@ interface Props {
   eyebrow: string;
   title: string;
   lede?: string;
-  /** Small figures shown to the right of the lede on wide screens. */
+  /** Supporting facts; photo headers arrange these in a compact row. */
   stats?: { label: string; value: string }[];
+  mediaLayout?: 'banner' | 'portrait';
   class?: string;
 }
 
-const { eyebrow, title, lede, stats = [], class: className } = Astro.props;
+const { eyebrow, title, lede, stats = [], mediaLayout = 'banner', class: className } = Astro.props;
 const hasStats = stats.length > 0;
+const hasMedia = Astro.slots.has('media');
 ---
 
-<section class:list={['page-hero', className]}>
+<section class:list={['page-hero', hasMedia && `page-hero--${mediaLayout}`, className]}>
   <div class="container-page">
-    <p class="eyebrow">{eyebrow}</p>
-    <h1 class="page-hero__title">{title}</h1>
+    <div class="page-hero__layout">
+      <div class="page-hero__intro">
+        <p class="eyebrow">{eyebrow}</p>
+        <h1 class="page-hero__title">{title}</h1>
 
-    <div class:list={['page-hero__body', hasStats && 'has-stats']}>
-      <div class="page-hero__text">
-        {lede && <p class="lede">{lede}</p>}
-        {Astro.slots.has('default') && <div class="page-hero__actions actions"><slot /></div>}
+        <div class:list={['page-hero__body', hasStats && 'has-stats']}>
+          <div class="page-hero__text">
+            {lede && <p class="lede">{lede}</p>}
+            {Astro.slots.has('default') && <div class="page-hero__actions actions"><slot /></div>}
+          </div>
+
+          {
+            hasStats && (
+              <dl class="page-hero__stats">
+                {stats.map((stat) => (
+                  <div class="page-hero__stat">
+                    <dt>{stat.label}</dt>
+                    <dd>{stat.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )
+          }
+        </div>
+
+        {Astro.slots.has('meta') && <div class="page-hero__meta"><slot name="meta" /></div>}
       </div>
-
-      {
-        hasStats && (
-          <dl class="page-hero__stats">
-            {stats.map((stat) => (
-              <div class="page-hero__stat">
-                <dt>{stat.label}</dt>
-                <dd>{stat.value}</dd>
-              </div>
-            ))}
-          </dl>
-        )
-      }
+      {hasMedia && <div class="page-hero__media"><slot name="media" /></div>}
     </div>
-
-    {Astro.slots.has('meta') && <div class="page-hero__meta"><slot name="meta" /></div>}
   </div>
 </section>
 
@@ -92,6 +99,41 @@ const hasStats = stats.length > 0;
   }
 
   .page-hero__meta { margin-top: var(--space-lg); }
+  .page-hero__layout { display: grid; gap: 2rem; }
+  .page-hero__intro, .page-hero__media { min-width: 0; }
+
+  .page-hero--banner .page-hero__body.has-stats,
+  .page-hero--portrait .page-hero__body.has-stats {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+
+  .page-hero--banner .page-hero__body.has-stats .page-hero__stats,
+  .page-hero--portrait .page-hero__body.has-stats .page-hero__stats {
+    margin: 0;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    gap: 1.25rem 2rem;
+  }
+
+  .page-hero--banner .page-hero__body .lede { max-width: 72ch; }
+  .page-hero--portrait .page-hero__stat:last-child { grid-column: 1 / -1; }
+
+  @media (min-width: 760px) {
+    .page-hero--portrait .page-hero__layout {
+      grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem);
+      align-items: center;
+      gap: clamp(2rem, 5vw, 4rem);
+    }
+
+    .page-hero--portrait .page-hero__title { max-width: 16ch; }
+    .page-hero--portrait .page-hero__body.has-stats .page-hero__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .lab-intro .page-hero__stats { row-gap: 1.5rem; }
+  .lab-intro .page-hero__stat dd { margin-top: 0.4rem; }
 
   @media (min-width: 900px) {
     .page-hero__body.has-stats {

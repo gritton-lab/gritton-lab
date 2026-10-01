@@ -2,10 +2,12 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import PageHero from '../../components/PageHero.astro';
+import LabPhotos from '../../components/LabPhotos.astro';
+import { labPhotos } from '../../data/labPhotos';
 import SectionHeading from '../../components/SectionHeading.astro';
-import Card from '../../components/Card.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import FigureBand from '../../components/FigureBand.astro';
+import { projectPhotos } from '../../data/photoBands';
 import home from '../../data/home.json';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
@@ -24,6 +26,7 @@ const methodsBySlug: Record<string, string[]> = {
   description="Active research on neural rhythms, auditory attention, autism models, circuit homeostasis, and environmental risk."
 >
   <PageHero
+    mediaLayout="portrait"
     eyebrow="Research"
     title="From signal to decision."
     lede="Each decision we make depends on the coordinated actions of thousands of nerve cells from diverse brain regions working in unison at brief moments in time. These are the questions the lab is working on now."
@@ -32,7 +35,9 @@ const methodsBySlug: Record<string, string[]> = {
       { label: 'Core methods', value: 'Imaging · Ephys · MRI' },
       { label: 'Department', value: 'Comparative Biosciences' },
     ]}
-  />
+  >
+    <LabPhotos slot="media" photos={[labPhotos.microscope]} />
+  </PageHero>
 
   <section class="page-section">
     <div class="container-page">
@@ -42,33 +47,34 @@ const methodsBySlug: Record<string, string[]> = {
         intro="Every project page carries the full overview, the primary figures, and the methods behind them."
       />
 
-      <div class="section-body card-grid card-grid--3">
-        {
-          projects.map((project) => (
-            <Card
-              href={`/projects/${project.id}`}
-              eyebrow="Research project"
-              title={project.data.title}
-              summary={project.data.summary}
-              image={project.data.image}
-              imageAlt={project.data.imageAlt}
-              media="figure"
-              tags={methodsBySlug[project.id] ?? []}
-              footLabel="View project"
-            />
-          ))
-        }
-      </div>
+      <ol class="section-body project-list">
+        {projects.map((project, index) => (
+          <li>
+            <a class="project-row" href={`/projects/${project.id}`} aria-labelledby={`project-${project.id}`}>
+              <span class="project-row__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <div class="project-row__image">
+                <img src={project.data.image} alt={project.data.imageAlt} loading="lazy" decoding="async" />
+              </div>
+              <div class="project-row__body">
+                <h3 id={`project-${project.id}`}>{project.data.title}</h3>
+                <p>{project.data.summary}</p>
+                <ul class="project-row__methods" aria-label="Research methods">
+                  {(methodsBySlug[project.id] ?? []).map(method => <li>{method}</li>)}
+                </ul>
+              </div>
+              <span class="project-row__action">View project
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
 
-  <FigureBand
-    image="/images/uploads/oliver-ear-day-2024.jpg"
-    alt="Oliver presenting auditory scene analysis research at Ear Day 2024"
-    label="Ear Day 2024"
-    caption="Auditory scene analysis: how the cortex separates a target voice from competing sound."
-    focus="70% center"
-  />
+  <FigureBand slides={projectPhotos} />
 
   <section class="page-section">
     <div class="container-page">
@@ -96,6 +102,7 @@ const methodsBySlug: Record<string, string[]> = {
   <CtaBand
     eyebrow="Research in context"
     title="See where these questions are published."
+    accent="published."
     body="Peer-reviewed work on neural circuits, neuromodulation, and the tools that make these questions visible."
     links={[
       { label: 'Browse publications', href: '/publications', primary: true },
@@ -103,3 +110,43 @@ const methodsBySlug: Record<string, string[]> = {
     ]}
   />
 </Base>
+
+<style>
+  .project-list { list-style: none; padding: 0; border-top: 1px solid var(--line-strong); }
+  .project-list > li { border-bottom: 1px solid var(--line-strong); }
+  .project-row {
+    display: grid;
+    grid-template-columns: 1.5rem 11rem minmax(0, 1fr) 7.5rem;
+    align-items: center;
+    gap: clamp(1rem, 2vw, 1.75rem);
+    padding: 1.5rem 0.75rem;
+    color: var(--ink);
+    text-decoration: none;
+    transition: background-color 160ms ease;
+  }
+  .project-row:hover, .project-row:focus-visible { background: var(--paper); }
+  .project-row__number { align-self: start; padding-top: 0.15rem; font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .project-row__image { display: flex; align-items: center; justify-content: center; height: 9rem; padding: 0.35rem; background: white; }
+  .project-row__image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .project-row__body { min-width: 0; }
+  .project-row__body h3 { margin: 0; font-size: clamp(1.15rem, 1.6vw, 1.4rem); line-height: 1.25; text-wrap: pretty; }
+  .project-row__body p { max-width: 70ch; margin-top: 0.55rem; color: var(--ink-soft); font-size: 0.95rem; line-height: 1.55; }
+  .project-row__methods { display: flex; flex-wrap: wrap; gap: 0.4rem 0; list-style: none; padding: 0; margin-top: 0.8rem; color: var(--ink); font-size: 0.75rem; line-height: 1.3; }
+  .project-row__methods li + li { border-left: 1px solid var(--line-strong); margin-left: 0.7rem; padding-left: 0.7rem; }
+  .project-row__action { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+  .project-row__action svg { flex: none; }
+  @media (max-width: 1000px) {
+    .project-row { grid-template-columns: 1.25rem 9rem minmax(0, 1fr); }
+    .project-row__action { grid-column: 3; justify-content: start; }
+    .project-row__image { grid-row: span 2; }
+  }
+  @media (max-width: 600px) {
+    .project-row { grid-template-columns: 1.25rem minmax(0, 1fr); gap: 1rem; padding: 1.5rem 0; }
+    .project-row__image { grid-row: auto; height: 11rem; }
+    .project-row__body, .project-row__action { grid-column: 1 / -1; }
+    .project-row__body h3 { font-size: 1.3rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .project-row { transition: none; }
+  }
+</style>

@@ -21,6 +21,7 @@ const team = defineCollection({
       .array(z.object({ label: z.string(), url: z.string() }))
       .default([]),
     education: z.array(z.string()).default([]),
+    educationHeading: z.string().default('Appointments & education'),
     order: z.number().default(99),
   }),
 });
@@ -52,6 +53,9 @@ const news = defineCollection({
     summary: z.string().optional(),
     image: z.string().optional(),
     imageAlt: z.string().default(''),
+    imageCaption: z.string().optional(),
+    imageFit: z.enum(['cover', 'contain']).default('cover'),
+    imageFocus: z.string().optional(),
     // Optional YouTube or Vimeo link; rendered as an embedded player.
     video: z.string().optional(),
     draft: z.boolean().default(false),

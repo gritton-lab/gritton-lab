@@ -1,82 +1,70 @@
 ---
-/** Photograph band. Scientific figures belong in uncropped cards. */
+import type { BandPhoto } from '../data/photoBands';
+
 interface Props {
-  image: string;
-  alt: string;
-  /** Small mono label, e.g. the venue or the occasion. */
+  image?: string;
+  alt?: string;
   label?: string;
   caption?: string;
-  /** `short` for a divider, `tall` for a moment that should carry more weight. */
   height?: 'short' | 'tall';
-  /** Nudges the crop when the subject is not centred in the frame. */
   focus?: string;
+  slides?: BandPhoto[];
 }
 
-const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro.props;
+const { image, alt, label, caption, height = 'short', focus = 'center', slides } = Astro.props;
+const photos = slides?.length ? slides : [{ image: image!, alt: alt!, label, caption, focus }];
 ---
 
-<figure class:list={['figure-band', height === 'tall' && 'figure-band--tall']}>
-  <img src={image} alt={alt} loading="lazy" decoding="async" style={`object-position:${focus}`} />
-  <div class="figure-band__wash" aria-hidden="true"></div>
-
-  {
-    (label || caption) && (
-      <figcaption class="figure-band__caption">
-        {label && <p class="figure-band__label">{label}</p>}
-        {caption && <p class="figure-band__text">{caption}</p>}
-      </figcaption>
-    )
-  }
-</figure>
+<div class:list={['figure-band', height === 'tall' && 'figure-band--tall']} data-photo-band data-interval="8000"
+  role={photos.length > 1 ? 'group' : undefined} aria-label={photos.length > 1 ? 'Lab photographs' : undefined}>
+  {photos.map((photo, index) => (
+    <figure class:list={['figure-band__slide', index === 0 && 'is-active']} aria-hidden={index !== 0 ? 'true' : undefined}>
+      <img src={photo.image} alt={photo.alt} loading="lazy" decoding="async" style={`object-position:${photo.focus ?? 'center'}`} />
+      {(photo.label || photo.caption) && (
+        <figcaption class="figure-band__caption">
+          {photo.label && <p class="figure-band__label">{photo.label}</p>}
+          {photo.caption && <p class="figure-band__text">{photo.caption}</p>}
+        </figcaption>
+      )}
+    </figure>
+  ))}
+</div>
 
 <style>
   .figure-band {
     position: relative;
-    display: flex;
+    display: grid;
     width: min(var(--measure), calc(100% - var(--rail) * 2));
     margin-inline: auto;
-    height: clamp(17rem, 30vw, 22rem);
-    align-items: flex-end;
     overflow: hidden;
-    background: var(--ink-deep);
+    background: var(--paper-bright);
   }
 
-  .figure-band--tall { height: clamp(19rem, 40vw, 30rem); }
+  .figure-band__slide { grid-area: 1 / 1; min-width: 0; margin: 0; visibility: hidden; }
+  .figure-band__slide.is-active { visibility: visible; }
+
+  .figure-band--tall img { height: clamp(19rem, 40vw, 30rem); }
 
   .figure-band img {
-    position: absolute;
-    inset: 0;
+    display: block;
     width: 100%;
-    height: 100%;
+    height: clamp(17rem, 30vw, 22rem);
     object-fit: cover;
-    filter: saturate(0.72) contrast(1.04);
-  }
-
-  .figure-band__wash {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(
-        0deg,
-        rgba(19, 41, 75, 0.94) 0%,
-        rgba(19, 41, 75, 0.82) 18%,
-        rgba(19, 41, 75, 0.45) 45%,
-        rgba(19, 41, 75, 0.1) 100%
-      );
   }
 
   .figure-band__caption {
     position: relative;
     z-index: 2;
     width: 100%;
-    padding: clamp(1.25rem, 3vw, 2rem);
-    color: #fff;
+    padding-block: 1.25rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
   }
 
   .figure-band__label {
     max-width: 40ch;
     margin-bottom: 0.5rem;
-    color: var(--sky);
+    color: var(--signal);
     font-family: var(--font-mono);
     font-size: 0.58rem;
     font-weight: 500;
@@ -94,7 +82,7 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
 
   .figure-band__text {
     max-width: 46ch;
-    color: rgba(255, 255, 255, 0.92);
+    color: var(--ink-soft);
     font-family: var(--font-display);
     font-size: clamp(1.05rem, 1.7vw, 1.4rem);
     font-weight: 500;
@@ -102,3 +90,38 @@ const { image, alt, label, caption, height = 'short', focus = 'center' } = Astro
     line-height: 1.35;
   }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-photo-band]').forEach((band) => {
+    const slides = [...band.querySelectorAll<HTMLElement>('.figure-band__slide')];
+    if (slides.length < 2) return;
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let current = 0;
+    let moving = false;
+
+    // Decode all three photos before starting so later slides never arrive blank.
+    Promise.all(slides.map(async (slide) => {
+      const image = slide.querySelector('img')!;
+      image.loading = 'eager';
+      try { await image.decode(); } catch { /* Keep the readable alt text on failure. */ }
+    })).then(() => {
+      const timer = window.setInterval(async () => {
+        if (!band.isConnected) { clearInterval(timer); return; }
+        if (document.hidden || moving) return;
+        moving = true;
+        const previous = slides[current];
+        current = (current + 1) % slides.length;
+        const next = slides[current];
+        previous.setAttribute('aria-hidden', 'true');
+        next.removeAttribute('aria-hidden');
+        next.classList.add('is-active');
+        const options = { duration: reducedMotion.matches ? 0 : 750, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+        const outgoing = previous.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(100%)' }], options);
+        const incoming = next.animate([{ transform: 'translateX(-100%)' }, { transform: 'translateX(0)' }], options);
+        await Promise.allSettled([outgoing.finished, incoming.finished]);
+        previous.classList.remove('is-active');
+        moving = false;
+      }, Number(band.dataset.interval));
+    });
+  });
+</script>

@@ -1,34 +1,40 @@
 ---
+import BandArtwork from './BandArtwork.astro';
+
 interface Props {
   eyebrow?: string;
   title: string;
+  accent?: string;
   body?: string;
   links: { label: string; href: string; primary?: boolean }[];
 }
 
-const { eyebrow = 'Next', title, body, links } = Astro.props;
+const { eyebrow = 'Next', title, accent, body, links } = Astro.props;
+const highlight = accent && title.endsWith(accent) ? accent : '';
+const peopleFocused = links.some(link => link.href === '/lab-positions');
 ---
 
 <section class="page-section page-section--dark cta-band">
   <div class="container-page cta-band__inner">
     <div class="cta-band__text">
       <p class="eyebrow eyebrow--light">{eyebrow}</p>
-      <h2 class="cta-band__title">{title}</h2>
+      <h2 class="cta-band__title">{highlight ? title.slice(0, -highlight.length) : title}{highlight && <span>{highlight}</span>}</h2>
       {body && <p class="lede cta-band__body">{body}</p>}
+      <div class="actions cta-band__actions">
+        {
+          links.map((link) => (
+            <a href={link.href} class:list={['button', link.primary ? 'button--primary' : 'button--light']}>
+              {link.label}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          ))
+        }
+      </div>
     </div>
 
-    <div class="actions cta-band__actions">
-      {
-        links.map((link) => (
-          <a href={link.href} class:list={['button', link.primary ? 'button--primary' : 'button--light']}>
-            {link.label}
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </a>
-        ))
-      }
-    </div>
+    <BandArtwork variant={peopleFocused ? 'network' : 'signals'} />
   </div>
 </section>
 
@@ -37,30 +43,44 @@ const { eyebrow = 'Next', title, body, links } = Astro.props;
     width: min(var(--measure), calc(100% - var(--rail) * 2));
     margin-inline: auto;
     margin-block-end: var(--space-section);
+    padding: clamp(2rem, 4.5vw, 4rem);
+    background: var(--panel-bg);
+    border-top: 1px solid var(--panel-line);
   }
 
   .cta-band__inner {
     display: grid;
-    gap: var(--space-lg);
-    padding-inline: clamp(1.25rem, 3vw, 2rem);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4rem);
+    padding: 0;
   }
 
-  .cta-band .eyebrow { margin-bottom: 0.85rem; }
+  .cta-band .eyebrow { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.75rem; color: var(--panel-muted); font-size: 0.66rem; }
+  .cta-band .eyebrow::before { content: ''; width: 5px; height: 5px; flex: none; border-radius: 50%; background: var(--panel-accent); }
 
   .cta-band__title {
-    max-width: 22ch;
+    max-width: 24ch;
     margin: 0;
+    color: var(--panel-text);
+    font-size: clamp(1.8rem, 3.1vw, 2.9rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    text-wrap: pretty;
   }
 
-  .cta-band__body { margin-top: 1rem; }
+  .cta-band__title span { color: var(--panel-accent); }
+  .cta-band .cta-band__body { max-width: 46ch; margin-top: 1.5rem; color: var(--panel-muted); font-size: 0.95rem; line-height: 1.7; }
+  .cta-band__actions { margin-top: 1.75rem; gap: 0.7rem; }
+  .cta-band .button { font-size: 0.85rem; padding: 0.8rem 1.15rem; }
 
-  @media (min-width: 900px) {
-    .cta-band__inner {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-      gap: var(--space-block);
-    }
+  .cta-band .button { min-height: 3rem; font-weight: 600; background: var(--panel-text); border-color: var(--panel-text); color: var(--panel-bg); }
+  .cta-band .button:hover { background: var(--art-line); border-color: var(--art-line); color: var(--panel-bg); }
 
-    .cta-band__actions { justify-content: flex-end; }
+  @media (max-width: 700px) {
+    .cta-band__inner { grid-template-columns: 1fr; }
+    .cta-band__actions { display: grid; grid-template-columns: 1fr; }
+    .cta-band__title { font-size: clamp(1.8rem, 7vw, 2.6rem); }
   }
 </style>

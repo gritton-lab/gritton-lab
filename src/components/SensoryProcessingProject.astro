@@ -1,0 +1,195 @@
+---
+const imageRoot = '/images/projects/sensory-processing';
+const stimuli = [
+  {
+    number: '03', title: 'Tone', file: 'tone.png', width: 436, height: 69,
+    alt: 'Speaker and sinusoidal waveform representing the auditory tone.',
+    caption: 'The auditory signal used in the discrimination task.',
+  },
+  {
+    number: '04', title: 'Tone + light', file: 'visual-distractors.png', width: 436, height: 252,
+    alt: 'Tone waveform between two light pulse sequences, with flashes at different points in each sequence.',
+    caption: 'Light pulses introduce a visual distractor alongside the tone.',
+  },
+  {
+    number: '05', title: 'Tone + noise', file: 'auditory-distractors.png', width: 439, height: 208,
+    alt: 'A sinusoidal tone waveform above an irregular red noise waveform.',
+    caption: 'Added noise introduces an auditory distractor.',
+  },
+];
+
+// Describe the supplied plots without assigning unconfirmed distractor conditions.
+const responses = [
+  {
+    number: '06', title: 'Closely aligned responses', file: 'aligned-responses.png', width: 559, height: 558,
+    alt: 'Right lick proportion versus frequency: black WT and red Fmr1 KO curves closely overlap, rising around 8 kHz.',
+    caption: 'WT and Fmr1 KO response curves closely overlap across the tested frequencies.',
+  },
+  {
+    number: '07', title: 'Different response slopes', file: 'response-comparison-a.png', width: 551, height: 486,
+    alt: 'Right lick proportion versus frequency: WT responses rise sharply near 8 kHz, while Fmr1 KO responses change more gradually and reach a lower upper plateau.',
+    caption: 'The WT curve rises sharply near 8 kHz; the Fmr1 KO curve changes more gradually and reaches a lower plateau.',
+  },
+  {
+    number: '08', title: 'A broader response transition', file: 'response-comparison-b.png', width: 563, height: 499,
+    alt: 'Right lick proportion versus frequency: the WT curve is sigmoid, while the Fmr1 KO curve rises gradually across the frequency range.',
+    caption: 'The Fmr1 KO curve shows a broad, gradual transition across the frequency range compared with WT.',
+  },
+];
+---
+
+<div class="sensory-project">
+  <div class="container-page">
+    <nav class="project-nav" aria-label="On this project page">
+      <span class="meta">Explore the project</span>
+      <a href="#overview">01 <span>Overview</span></a>
+      <a href="#task">02 <span>The task</span></a>
+      <a href="#responses">03 <span>Response curves</span></a>
+    </nav>
+
+    <section class="overview" id="overview" aria-labelledby="overview-title">
+      <div class="overview-copy">
+        <p class="eyebrow">The research question</p>
+        <h2 id="overview-title">Hearing in a complex world.</h2>
+        <div class="prose-lab research-copy"><slot /></div>
+      </div>
+      <figure class="chamber-figure">
+        <div class="figure-topline"><span class="meta">01 / The behavioral chamber</span></div>
+        <a class="image-link" href={`${imageRoot}/behavioral-chamber.png`} target="_blank" rel="noopener" aria-label="View the behavioral chamber figure at full size (opens in a new tab)">
+          <img src={`${imageRoot}/behavioral-chamber.png`} width="656" height="574" alt="Illustration of a mouse in a behavioral chamber with a speaker and left and right response ports." fetchpriority="high" />
+        </a>
+        <figcaption>
+          <p>A mouse in the chamber used to study auditory decisions.</p>
+          <a class="figure-link" href={`${imageRoot}/behavioral-chamber.png`} target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span><span class="sr-only">: behavioral chamber (opens in a new tab)</span></a>
+        </figcaption>
+      </figure>
+    </section>
+  </div>
+
+  <section class="task-section" id="task" aria-labelledby="task-title">
+    <div class="container-page">
+      <div class="section-intro">
+        <div>
+          <p class="eyebrow">The experimental design</p>
+          <h2 id="task-title">One task. More competing signals.</h2>
+        </div>
+        <p class="section-description">An auditory choice task provides a way to examine sensory encoding as attentional demands increase.</p>
+      </div>
+      <div class="task-grid">
+        <figure class="task-figure">
+          <div class="figure-topline"><span class="meta">02 / Auditory discrimination</span></div>
+          <a class="image-link" href={`${imageRoot}/discrimination-task.png`} target="_blank" rel="noopener" aria-label="View the auditory discrimination task figure at full size (opens in a new tab)">
+            <img src={`${imageRoot}/discrimination-task.png`} width="678" height="573" alt="Task schematic: a 0.5-second tone precedes a left or right response and reward. The frequency scale spans 4 to 16 kHz, with lower tones associated with left reward and higher tones with right reward." loading="lazy" decoding="async" />
+          </a>
+          <figcaption>
+            <p>Tone frequency guides the choice of a left or right reward port. The frequency scale illustrates the octave intervals used in the task.</p>
+            <a class="figure-link" href={`${imageRoot}/discrimination-task.png`} target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span><span class="sr-only">: discrimination task (opens in a new tab)</span></a>
+          </figcaption>
+        </figure>
+        <div class="stimulus-list">
+          {stimuli.map((stimulus) => (
+            <figure class="stimulus-figure">
+              <div class="stimulus-heading"><span class="figure-number">{stimulus.number}</span><h3>{stimulus.title}</h3></div>
+              <a class="image-link" href={`${imageRoot}/${stimulus.file}`} target="_blank" rel="noopener" aria-label={`View ${stimulus.title.toLowerCase()} at full size (opens in a new tab)`}>
+                <img src={`${imageRoot}/${stimulus.file}`} width={stimulus.width} height={stimulus.height} alt={stimulus.alt} loading="lazy" decoding="async" />
+              </a>
+              <figcaption><p>{stimulus.caption}</p></figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="responses-section container-page" id="responses" aria-labelledby="responses-title">
+    <div class="section-intro">
+      <div>
+        <p class="eyebrow">Behavioral responses</p>
+        <h2 id="responses-title">From sound to choice.</h2>
+      </div>
+      <div class="response-key" aria-label="Plot legend">
+        <span><i class="key-dot" aria-hidden="true"></i> WT</span>
+        <span><i class="key-dot key-dot--ko" aria-hidden="true"></i> Fmr1 KO</span>
+      </div>
+    </div>
+    <p class="plot-intro">The plots show the proportion of rightward lick responses across tone frequencies, comparing wild-type (WT) and Fmr1-knockout mice.</p>
+    <div class="response-grid">
+      {responses.map((response) => (
+        <figure class="response-figure">
+          <div class="figure-topline"><span class="meta">{response.number} / Response comparison</span></div>
+          <a class="image-link plot-image" href={`${imageRoot}/${response.file}`} target="_blank" rel="noopener" aria-label={`View ${response.title.toLowerCase()} at full size (opens in a new tab)`}>
+            <img src={`${imageRoot}/${response.file}`} width={response.width} height={response.height} alt={response.alt} loading="lazy" decoding="async" />
+          </a>
+          <figcaption>
+            <h3>{response.title}</h3>
+            <p>{response.caption}</p>
+            <a class="figure-link" href={`${imageRoot}/${response.file}`} target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span><span class="sr-only">: {response.title.toLowerCase()} (opens in a new tab)</span></a>
+          </figcaption>
+        </figure>
+      ))}
+    </div>
+  </section>
+</div>
+
+<style>
+  .sensory-project { border-bottom: 1px solid var(--line); }
+  .project-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; border-block: 1px solid var(--line); padding-block: 1.1rem; }
+  .project-nav > span { margin-right: auto; }
+  .project-nav a { display: flex; gap: 0.6rem; color: var(--signal); font-family: var(--font-mono); font-size: 0.7rem; }
+  .project-nav a span { color: var(--ink); font-family: var(--font-sans); font-size: 0.88rem; }
+  .project-nav a:hover span { text-decoration: underline; text-underline-offset: 4px; }
+  section { scroll-margin-top: 2rem; }
+  .overview { display: grid; gap: var(--space-block); align-items: start; padding-block: var(--space-section); }
+  .eyebrow { margin-bottom: 1rem; }
+  h2 { margin: 0; }
+  .research-copy { margin-top: 1.5rem; }
+  .research-copy :global(p:last-child) { border-left: 3px solid var(--signal); padding-left: 1.15rem; color: var(--ink-deep); }
+  figure { margin: 0; min-width: 0; }
+  .chamber-figure { background: var(--paper); padding: clamp(1rem, 2vw, 1.5rem); }
+  .figure-topline { padding-bottom: 1rem; }
+  .image-link { display: block; background: white; }
+  .image-link img { display: block; width: 100%; height: auto; }
+  .image-link:hover { outline: 2px solid var(--signal); outline-offset: 4px; }
+  figcaption { padding-top: 1rem; color: var(--ink-soft); font-size: 0.86rem; line-height: 1.6; }
+  .figure-link { display: inline-flex; gap: 0.5rem; margin-top: 0.7rem; color: var(--signal-dark); font-size: 0.78rem; font-weight: 500; }
+  .figure-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .task-section { background: var(--paper); padding-block: var(--space-section); border-block: 1px solid var(--line); }
+  .section-intro { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1.5rem 3rem; }
+  .section-description { max-width: 35ch; color: var(--ink-soft); font-size: 0.96rem; }
+  .task-grid { display: grid; align-items: start; gap: var(--space-block); margin-top: var(--space-block); }
+  .task-figure { padding: clamp(1rem, 2.2vw, 2rem); background: white; border-top: 3px solid var(--ink-deep); }
+  .task-figure figcaption { border-top: 1px solid var(--line); margin-top: 1.25rem; }
+  .stimulus-list { display: grid; gap: 1.4rem; }
+  .stimulus-figure { padding-bottom: 1.4rem; border-bottom: 1px solid var(--line-strong); }
+  .stimulus-heading { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.85rem; }
+  .figure-number { font: 0.7rem var(--font-mono); color: var(--signal); }
+  .stimulus-heading h3 { font-size: 1.12rem; }
+  .stimulus-figure .image-link { padding: 0.75rem 1rem; }
+  .stimulus-figure img { max-height: 8.5rem; object-fit: contain; }
+  .stimulus-figure figcaption { padding-top: 0.6rem; font-size: 0.82rem; }
+  .responses-section { padding-block: var(--space-section); }
+  .response-key { display: flex; gap: 1.3rem; padding-bottom: 0.2rem; font-size: 0.85rem; }
+  .response-key span { display: flex; align-items: center; gap: 0.5rem; }
+  .key-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: black; }
+  .key-dot--ko { background: #f00; }
+  .plot-intro { max-width: 66ch; color: var(--ink-soft); margin-top: 1.25rem; }
+  .response-grid { display: grid; gap: var(--gap-grid); margin-top: 2rem; }
+  .response-figure { border-top: 2px solid var(--ink-deep); padding-top: 1rem; }
+  .plot-image { aspect-ratio: 1; display: flex; align-items: center; }
+  .plot-image img { max-height: 100%; object-fit: contain; }
+  .response-figure figcaption { border-top: 1px solid var(--line); margin-top: 1rem; }
+  .response-figure h3 { font-size: 1.08rem; margin-bottom: 0.65rem; }
+  @media (min-width: 760px) {
+    .overview { grid-template-columns: 1.1fr 1fr; }
+    .task-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+    .response-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 759px) {
+    .project-nav { gap: 0.9rem 1.4rem; }
+    .project-nav > span { flex-basis: 100%; }
+    .chamber-figure { max-width: 36rem; margin-inline: auto; }
+    .stimulus-figure img { max-height: 10rem; }
+    .response-figure { width: 100%; max-width: 34rem; margin-inline: auto; }
+    .plot-image { aspect-ratio: auto; }
+  }
+</style>

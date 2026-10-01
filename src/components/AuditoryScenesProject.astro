@@ -1,0 +1,148 @@
+---
+import ProjectResearchFigure from './ProjectResearchFigure.astro';
+
+const imageRoot = '/images/projects/auditory-scenes';
+const methods = [
+  {
+    number: '02', label: 'In vivo imaging', title: 'Watching neural activity',
+    src: `${imageRoot}/auditory-imaging.png`, width: 320, height: 308,
+    alt: 'Illustration of a mouse beneath an imaging camera, with a nearby source labeled Audio Stimulus.',
+    caption: 'An imaging setup pairs auditory stimulation with observation of neural activity in vivo.',
+  },
+  {
+    number: '03', label: 'Cortical mapping', title: 'Locating the recordings',
+    src: `${imageRoot}/cortical-recording-map.png`, width: 296, height: 308,
+    alt: 'Colored regions over a grayscale cortical image, with four recording probe schematics and a dashed white boundary.',
+    caption: 'A cortical map with recording probes overlaid illustrates the spatial organization of the recording sites.',
+  },
+  {
+    number: '04', label: 'Electrophysiology', title: 'Listening to neural populations',
+    src: `${imageRoot}/electrophysiology.png`, width: 382, height: 308,
+    alt: 'Illustration of a head-fixed mouse with a multichannel electrode assembly positioned above the exposed cortex.',
+    caption: 'Electrophysiological recordings provide a complementary view of neural population activity.',
+  },
+];
+---
+
+<div class="auditory-project">
+  <div class="container-page">
+    <nav class="project-nav" aria-label="On this project page">
+      <span class="meta">Explore the project</span>
+      <a href="#overview">01 <span>The question</span></a>
+      <a href="#recording">02 <span>Measuring activity</span></a>
+      <a href="#circuits">03 <span>Probing the circuits</span></a>
+    </nav>
+
+    <section class="overview" id="overview" aria-labelledby="overview-title">
+      <div>
+        <p class="eyebrow">The cocktail-party problem</p>
+        <h2 id="overview-title">Many sounds.<br />One focus of attention.</h2>
+        <div class="prose-lab research-copy"><slot /></div>
+      </div>
+      <div class="spatial-setup">
+        <ProjectResearchFigure
+          number="01" label="Spatial sound" title="Sound from multiple directions"
+          src={`${imageRoot}/spatial-sound-arena.png`} width={502} height={306}
+          alt="Overhead view of an experimental arena with a mouse at the center and speakers positioned at different angles around it."
+          caption="Speakers arranged around the animal allow sounds to be presented from different spatial locations."
+          variant="featured" eager
+        />
+        <div class="focus-note">
+          <p class="eyebrow">At the intersection</p>
+          <ul aria-label="Research themes">
+            <li>Auditory attention</li>
+            <li>Cortical inhibition</li>
+            <li>Spatial sound processing</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="recording-section" id="recording" aria-labelledby="recording-title">
+    <div class="container-page">
+      <div class="section-intro">
+        <div>
+          <p class="eyebrow">Complementary views of neural activity</p>
+          <h2 id="recording-title">From sound to population activity.</h2>
+        </div>
+        <p>Imaging and electrophysiology connect the acoustic scene to activity in cortical populations.</p>
+      </div>
+      <div class="method-grid">
+        {methods.map((method) => <ProjectResearchFigure {...method} />)}
+      </div>
+      <div class="analysis-note">
+        <span class="eyebrow">Connecting the measurements</span>
+        <p>Machine learning helps quantify how neural populations encode and discriminate sounds from different spatial locations.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="circuit-section" id="circuits" aria-labelledby="circuits-title">
+    <div class="container-page">
+      <div class="section-intro">
+        <div>
+          <p class="eyebrow">Attention &amp; inhibition</p>
+          <h2 id="circuits-title">Probing the circuits behind the scene.</h2>
+        </div>
+        <p>Selective control of neuronal populations helps investigate the mechanisms that shape auditory processing.</p>
+      </div>
+      <div class="circuit-grid">
+        <ProjectResearchFigure
+          number="05" label="Optogenetics" title="Controlling activity with light"
+          src={`${imageRoot}/auditory-optogenetics.png`} width={454} height={318}
+          alt="Brain schematic showing an optical fiber directing green light toward the auditory region labeled AUD."
+          caption="Light delivery to the auditory cortex illustrates the optogenetic approach used to selectively control neuronal activity."
+          variant="circuit"
+        />
+        <ProjectResearchFigure
+          number="06" label="Circuit organization" title="Linking attention and inhibition"
+          src={`${imageRoot}/attention-inhibition-circuit.png`} width={294} height={440}
+          alt="Circuit schematic showing bidirectional connections between PFC and A1. Below, VIP neurons inhibit SST and PV neurons, which inhibit an excitatory pyramidal neuron."
+          caption="The schematic links prefrontal (PFC) and primary auditory (A1) cortices and depicts inhibitory interactions among VIP, SST, and PV interneurons and an excitatory pyramidal neuron."
+          variant="circuit"
+        />
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  .project-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; border-block: 1px solid var(--line); padding-block: 1.1rem; }
+  .project-nav > span { margin-right: auto; }
+  .project-nav a { display: flex; gap: 0.6rem; color: var(--signal); font-family: var(--font-mono); font-size: 0.7rem; }
+  .project-nav a span { color: var(--ink); font-family: var(--font-sans); font-size: 0.88rem; }
+  .project-nav a:hover span { text-decoration: underline; text-underline-offset: 4px; }
+  section { scroll-margin-top: 2rem; }
+  .eyebrow { margin-bottom: 1rem; }
+  h2 { margin: 0; }
+  .overview { display: grid; align-items: start; gap: var(--space-block); padding-block: var(--space-section); }
+  .research-copy { margin-top: 1.5rem; }
+  .research-copy :global(p:last-child) { border-left: 3px solid var(--signal); padding-left: 1.15rem; color: var(--ink-deep); }
+  .spatial-setup { display: grid; gap: 1.75rem; }
+  .focus-note { padding-inline: clamp(1rem, 2vw, 1.75rem); }
+  .focus-note .eyebrow { margin-bottom: 0.65rem; }
+  .focus-note ul { display: grid; gap: 0.4rem; }
+  .focus-note li { display: flex; align-items: center; gap: 0.75rem; color: var(--ink-soft); font-size: 0.95rem; }
+  .focus-note li::before { content: ''; width: 1.3rem; height: 1px; background: var(--signal); }
+  .recording-section { border-top: 1px solid var(--line); padding-block: var(--space-section); }
+  .section-intro { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1.5rem 3rem; }
+  .section-intro > p { max-width: 35ch; color: var(--ink-soft); font-size: 0.96rem; }
+  .method-grid { display: grid; gap: var(--space-block) var(--gap-grid); margin-top: var(--space-block); }
+  .analysis-note { display: grid; gap: 0.75rem 2rem; margin-top: var(--space-block); padding: 1.5rem; background: var(--paper); border-left: 3px solid var(--signal); }
+  .analysis-note .eyebrow { margin: 0; line-height: 1.65; }
+  .analysis-note p { max-width: 70ch; color: var(--ink-soft); font-size: 0.95rem; }
+  .circuit-section { background: var(--paper); padding-block: var(--space-section); border-block: 1px solid var(--line); }
+  .circuit-grid { display: grid; gap: var(--gap-grid); margin-top: var(--space-block); }
+  @media (min-width: 760px) {
+    .overview { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    .method-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .circuit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .analysis-note { grid-template-columns: 15rem 1fr; align-items: center; }
+  }
+  @media (max-width: 759px) {
+    .project-nav { gap: 0.9rem 1.4rem; }
+    .project-nav > span { flex-basis: 100%; }
+    .spatial-setup { max-width: 34rem; margin-inline: auto; }
+  }
+</style>

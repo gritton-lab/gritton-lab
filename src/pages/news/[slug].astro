@@ -1,5 +1,6 @@
 ---
 import type { GetStaticPaths } from 'astro';
+import NewsImageCredit from '../../components/NewsImageCredit.astro';
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
@@ -20,7 +21,7 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { title, date, datePrecision, summary, image, imageAlt, video } = post.data;
+const { title, date, datePrecision, summary, image, imageAlt, imageCaption, imageFit, imageFocus, video } = post.data;
 const { Content } = await render(post);
 
 const more = (await getCollection('news', ({ data }) => !data.draft))
@@ -61,8 +62,8 @@ const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
         {
           image && (
             <figure class="story__figure">
-              <img src={image} alt="" />
-              {imageAlt && <figcaption class="meta">{imageAlt}</figcaption>}
+              <img src={image} alt={imageAlt} style={{ objectFit: imageFit, objectPosition: imageFocus ? `center ${imageFocus}` : undefined }} />
+              {(imageCaption || imageAlt) && <figcaption class="meta">{imageCaption ?? imageAlt}<NewsImageCredit image={image} /></figcaption>}
             </figure>
           )
         }
@@ -104,6 +105,8 @@ const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
                 summary={item.data.summary}
                 image={item.data.image}
                 imageAlt={item.data.imageAlt}
+                imageFit={item.data.imageFit}
+                imageFocus={item.data.imageFocus}
                 category={item.data.category}
                 footLabel="Read story"
               />
@@ -117,6 +120,7 @@ const formatShort = (value: Date, precision: 'day' | 'month' = 'day') =>
   <CtaBand
     eyebrow="The research"
     title="What the lab is working on."
+    accent="working on."
     body="The projects and publications behind the news."
     links={[
       { label: 'Research projects', href: '/projects', primary: true },

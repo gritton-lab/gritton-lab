@@ -1,91 +1,117 @@
 ---
+import BandArtwork from './BandArtwork.astro';
+
 interface Props {
   eyebrow?: string;
   statement: string;
+  accent?: string;
   /** Optional supporting figures shown beneath the statement. */
   stats?: { label: string; value: string }[];
 }
 
-const { eyebrow, statement, stats = [] } = Astro.props;
+const { eyebrow, statement, accent, stats = [] } = Astro.props;
+const highlight = accent && statement.endsWith(accent) ? accent : '';
 ---
 
 <section class="statement-band">
-  <div class="container-page">
-    {eyebrow && <p class="statement-band__eyebrow">{eyebrow}</p>}
-    <p class="statement-band__text">{statement}</p>
-
-    {
-      stats.length > 0 && (
-        <dl class="statement-band__stats">
-          {stats.map((stat) => (
-            <div>
-              <dt>{stat.label}</dt>
-              <dd>{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )
-    }
+  <div class="statement-band__intro">
+    <div class="statement-band__copy">
+      {eyebrow && <p class="statement-band__eyebrow">{eyebrow}</p>}
+      <h2 class="statement-band__text">{highlight ? statement.slice(0, -highlight.length) : statement}{highlight && <span>{highlight}</span>}</h2>
+    </div>
+    <BandArtwork variant="disruption" />
   </div>
+
+  {
+    stats.length > 0 && (
+      <dl class="statement-band__stats">
+        {stats.map((stat) => (
+          <div class="statement-band__stat">
+            <dt>{stat.label}</dt>
+            <dd>{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
 </section>
 
 <style>
   .statement-band {
     width: min(var(--measure), calc(100% - var(--rail) * 2));
     margin-inline: auto;
-    background: var(--ink-deep);
+    background: var(--panel-bg);
     color: #fff;
-    padding-block: clamp(3rem, 6vw, 5rem);
+    padding: clamp(2rem, 4.5vw, 4rem);
+    border-top: 1px solid var(--panel-line);
   }
 
-  .statement-band > .container-page {
-    padding-inline: clamp(1.25rem, 3vw, 2rem);
+  .statement-band__intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4rem);
   }
 
   .statement-band__eyebrow {
-    margin-bottom: 1.1rem;
-    color: var(--sky);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1.75rem;
+    color: var(--panel-muted);
     font-family: var(--font-mono);
     font-size: 0.66rem;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 
+  .statement-band__eyebrow::before { content: ''; width: 5px; height: 5px; flex: none; border-radius: 50%; background: var(--panel-accent); }
+
   .statement-band__text {
-    max-width: 30ch;
-    color: #fff;
+    max-width: 25ch;
+    margin: 0;
+    color: var(--panel-text);
     font-family: var(--font-display);
-    font-size: clamp(1.5rem, 3.2vw, 2.6rem);
+    font-size: clamp(1.8rem, 3.1vw, 2.9rem);
     font-weight: 600;
-    letter-spacing: -0.022em;
-    line-height: 1.18;
-    text-wrap: balance;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: pretty;
   }
+
+  .statement-band__text span { color: var(--panel-accent); }
 
   .statement-band__stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-    gap: var(--space-md) var(--space-lg);
-    max-width: 52rem;
-    margin-top: clamp(2rem, 4vw, 3rem);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    margin: clamp(2rem, 4vw, 3rem) 0 0;
   }
 
+  .statement-band__stat { border-top: 1px solid var(--panel-line); padding-top: 1rem; }
+
   .statement-band__stats dt {
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--panel-muted);
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.66rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   .statement-band__stats dd {
-    margin-top: 0.3rem;
-    color: #fff;
+    margin: 0.65rem 0 0;
+    color: var(--panel-text);
     font-family: var(--font-display);
-    font-size: 1.3rem;
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
     font-weight: 600;
     letter-spacing: -0.02em;
-    line-height: 1.25;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 700px) {
+    .statement-band__intro { grid-template-columns: 1fr; }
+    .statement-band__stats { grid-template-columns: 1fr; gap: 1.25rem; }
+    .statement-band__text { font-size: clamp(1.8rem, 7vw, 2.6rem); }
   }
 </style>

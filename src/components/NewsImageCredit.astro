@@ -1,0 +1,34 @@
+---
+import credits from '../data/newsImageCredits.json';
+
+interface Props {
+  image: string;
+  inactive?: boolean;
+}
+
+const { image, inactive = false } = Astro.props;
+const credit = credits.find((entry) => entry.image === image);
+---
+
+{credit && (
+  <span class="photo-credit">
+    Photo: <a href={credit.source} tabindex={inactive ? '-1' : undefined}>{credit.author}</a>
+    {' · '}
+    <a href={credit.licenseUrl} tabindex={inactive ? '-1' : undefined}>{credit.license}</a>
+  </span>
+)}
+
+<style>
+  .photo-credit {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--ink-muted);
+    font-size: 0.7rem;
+    line-height: 1.5;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  a { text-underline-offset: 0.15em; }
+  a:hover { color: var(--signal); }
+</style>

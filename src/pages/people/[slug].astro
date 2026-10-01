@@ -220,7 +220,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
 
               {d.education.length > 0 && (
                 <div class="profile__facts">
-                  <p class="profile__kicker">Appointments &amp; education</p>
+                  <p class="profile__kicker">{d.educationHeading}</p>
                   <ul class="profile__edu">
                     {d.education.map((entry) => (
                       <li>{entry}</li>
@@ -406,7 +406,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
     display: grid;
     aspect-ratio: 4 / 5;
     place-items: center;
-    background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
+    background: var(--paper);
   }
 
   .profile__photo--empty span {
@@ -514,6 +514,32 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
   .profile__bio :global(p) { margin-block: 0.9em; }
   .profile__bio :global(> :first-child) { margin-top: 0; }
   .profile__bio :global(> :last-child) { margin-bottom: 0; }
+
+  .profile__bio :global(h2) {
+    margin-block: 2.25rem 1.25rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+
+  .profile__bio :global(h3) {
+    margin-block: 2rem 1rem;
+    color: var(--ink);
+    font-size: clamp(1.1rem, 2vw, 1.3rem);
+    line-height: 1.4;
+    letter-spacing: -0.015em;
+  }
+
+  .profile__bio :global(h2 + h3) { margin-top: 0; }
+
+  .profile__bio :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-block: 1rem 1.5rem;
+  }
 
   .profile__bio :global(a) {
     color: var(--ink);

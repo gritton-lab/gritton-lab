@@ -1,0 +1,54 @@
+---
+interface Props {
+  number: string;
+  label: string;
+  title: string;
+  src: string;
+  alt: string;
+  caption: string;
+  width: number;
+  height: number;
+  variant?: 'default' | 'featured' | 'circuit';
+  eager?: boolean;
+}
+
+const { number, label, title, src, alt, caption, width, height, variant = 'default', eager = false } = Astro.props;
+---
+
+<figure class:list={['research-figure', `research-figure--${variant}`]}>
+  <div class="figure-heading"><span class="figure-number">{number}</span><span class="meta">{label}</span></div>
+  <a class="figure-image" href={src} target="_blank" rel="noopener" aria-label={`View ${title.toLowerCase()} at full size (opens in a new tab)`}>
+    <img src={src} alt={alt} width={width} height={height} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+  </a>
+  <figcaption>
+    <h3>{title}</h3>
+    <p>{caption}</p>
+    <a class="figure-link" href={src} target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span><span class="sr-only">: {title.toLowerCase()} (opens in a new tab)</span></a>
+  </figcaption>
+</figure>
+
+<style>
+  .research-figure { margin: 0; min-width: 0; background: white; border-top: 2px solid var(--ink-deep); }
+  .figure-heading { display: flex; align-items: center; gap: 0.8rem; padding-block: 1rem; }
+  .figure-number { color: var(--signal); font: 0.75rem var(--font-mono); }
+  .figure-image { display: flex; align-items: center; justify-content: center; background: white; aspect-ratio: 1.15; }
+  .figure-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .figure-image:hover { outline: 2px solid var(--signal); outline-offset: 4px; }
+  figcaption { margin-top: 1.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  h3 { margin: 0 0 0.65rem; font-size: 1.15rem; }
+  figcaption p { color: var(--ink-soft); font-size: 0.9rem; line-height: 1.65; }
+  .figure-link { display: inline-flex; gap: 0.5rem; color: var(--signal-dark); font-size: 0.8rem; font-weight: 500; margin-top: 0.85rem; }
+  .figure-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .research-figure--featured { background: var(--paper); padding: clamp(1rem, 2vw, 1.75rem); }
+  .research-figure--featured .figure-heading { padding-top: 0; }
+  .research-figure--featured .figure-image { aspect-ratio: auto; padding-block: 1.25rem; }
+  .research-figure--featured img { height: auto; }
+  .research-figure--circuit { padding: clamp(1rem, 2.5vw, 2rem); border-top: 3px solid var(--ink-deep); }
+  .research-figure--circuit .figure-heading { padding-top: 0; }
+  .research-figure--circuit .figure-image { aspect-ratio: auto; height: 20rem; }
+  .research-figure--circuit img { max-width: 100%; width: auto; }
+  @media (max-width: 759px) {
+    .research-figure { max-width: 34rem; width: 100%; margin-inline: auto; }
+    .research-figure--circuit .figure-image { height: 18rem; }
+  }
+</style>

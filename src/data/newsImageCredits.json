@@ -1,0 +1,66 @@
+[
+  {
+    "image": "/images/news/beckman-institute.webp",
+    "author": "Daderot",
+    "source": "https://commons.wikimedia.org/wiki/File:Beckman_Institute_-_UIUC_-_DSC09175.JPG",
+    "license": "Public domain",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/File:Beckman_Institute_-_UIUC_-_DSC09175.JPG#Licensing",
+    "photographed": "2011-06-12",
+    "verified": "2026-10-01",
+    "changes": "Resized and converted to WebP; display crops vary by layout."
+  },
+  {
+    "image": "/images/news/nittany-lion-inn.webp",
+    "author": "JohnDziak",
+    "source": "https://commons.wikimedia.org/wiki/File:Nittany_Lion_Inn_at_Penn_State.jpg",
+    "license": "CC0 / Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "photographed": "2022-05-13",
+    "verified": "2026-10-01",
+    "eventSource": "https://www.huck.psu.edu/institutes-and-centers/neuroscience/event/big10-neuroscience-annual-meeting",
+    "changes": "Resized and converted to WebP; display crops vary by layout."
+  },
+  {
+    "image": "/images/news/san-diego-convention-center.webp",
+    "author": "Epukas",
+    "source": "https://commons.wikimedia.org/wiki/File:San_Diego_Convention_Center_2006.jpg",
+    "license": "Public domain",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/File:San_Diego_Convention_Center_2006.jpg#Licensing",
+    "photographed": "2006",
+    "verified": "2026-10-01",
+    "eventSource": "https://www.toxicology.org/events/am/am2026/",
+    "changes": "Resized and converted to WebP; display crops vary by layout."
+  },
+  {
+    "image": "/images/news/washington-convention-center.webp",
+    "author": "Duane Lempke",
+    "source": "https://commons.wikimedia.org/wiki/File:WEWashingtonConCen.jpg",
+    "license": "CC0 / Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "photographed": "2022-05-20",
+    "verified": "2026-10-01",
+    "eventSource": "https://www.sfn.org/meetings/neuroscience-2026/general-information/",
+    "changes": "Resized and converted to WebP; display crops vary by layout."
+  },
+  {
+    "image": "/images/news/grainger-engineering-library.webp",
+    "author": "Raysonho @ Open Grid Scheduler / Scalable Grid Engine",
+    "source": "https://commons.wikimedia.org/wiki/File:GraingerEngineeringLibrary.jpg",
+    "license": "CC0 / Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "photographed": "2018-10-30",
+    "verified": "2026-10-01",
+    "changes": "Resized and converted to WebP; display crops vary by layout."
+  },
+  {
+    "image": "/images/news/salt-palace.webp",
+    "author": "Mangoman88",
+    "source": "https://commons.wikimedia.org/wiki/File:Salt_Palace_-_12_September_2012.JPG",
+    "license": "CC0 / Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "photographed": "2012-09-12",
+    "verified": "2026-10-01",
+    "changes": "Resized and converted to WebP; display crops vary by layout.",
+    "eventSource": "https://www.toxicology.org/about/history/annualmeeting.asp"
+  }
+]

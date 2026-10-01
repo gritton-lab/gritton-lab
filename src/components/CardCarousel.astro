@@ -1,0 +1,103 @@
+---
+interface Props {
+  label: string;
+  interval?: number;
+}
+
+const { label, interval = 8000 } = Astro.props;
+---
+
+<div class="card-carousel section-body" data-card-carousel data-interval={interval} role="group" aria-roledescription="carousel" aria-label={label}>
+  <div class="card-carousel__viewport">
+    <div class="card-grid card-grid--3 card-carousel__track" data-carousel-track>
+      <slot />
+    </div>
+  </div>
+</div>
+
+<style>
+  .card-carousel { position: relative; }
+
+  .card-carousel__viewport {
+    overflow: hidden;
+    padding-block: 1rem;
+    margin-block: -1rem;
+  }
+
+  /* Keep the existing three-card grid when JavaScript is unavailable. */
+  .card-carousel:not(.is-ready) .card-carousel__track > :global(:nth-child(n + 4)) {
+    display: none;
+  }
+
+  .card-carousel.is-ready .card-carousel__track {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--card-width);
+  }
+
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-card-carousel]').forEach((carousel) => {
+    const track = carousel.querySelector<HTMLElement>('[data-carousel-track]')!;
+    const cards = [...track.children] as HTMLElement[];
+    if (cards.length < 2) return;
+
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const interval = Number(carousel.dataset.interval) || 8000;
+    let focused = false;
+    let columns = 3;
+    let step = 0;
+    let animation: Animation | undefined;
+
+    const updateCards = () => {
+      [...track.children].forEach((child, index) => {
+        const card = child as HTMLElement;
+        card.inert = index >= columns;
+        if (index >= columns) card.setAttribute('aria-hidden', 'true');
+        else card.removeAttribute('aria-hidden');
+      });
+    };
+
+    const advance = () => {
+      // Prepend the next card offscreen, then slide the entire row one place right.
+      const entering = track.lastElementChild as HTMLElement;
+      track.prepend(entering);
+      updateCards();
+      animation = track.animate(
+        [{ transform: `translateX(-${step}px)` }, { transform: 'translateX(0)' }],
+        { duration: reducedMotion.matches ? 0 : 700, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+      );
+      animation.onfinish = () => { animation = undefined; };
+    };
+
+    const measure = () => {
+      animation?.cancel();
+      animation = undefined;
+      // Read the original grid to preserve its card widths, gaps, and breakpoints.
+      carousel.classList.remove('is-ready');
+      columns = getComputedStyle(track).gridTemplateColumns.split(' ').length;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      const width = (track.clientWidth - gap * (columns - 1)) / columns;
+      step = width + gap;
+      track.style.setProperty('--card-width', `${width}px`);
+      carousel.classList.add('is-ready');
+      updateCards();
+    };
+
+    carousel.addEventListener('focusin', () => { focused = true; });
+    carousel.addEventListener('focusout', () => {
+      queueMicrotask(() => { focused = carousel.contains(document.activeElement); });
+    });
+    reducedMotion.addEventListener('change', () => {
+      if (reducedMotion.matches) animation?.finish();
+    });
+
+    // Keep a steady cadence across scrolling and hover; only keyboard focus holds a card.
+    window.setInterval(() => {
+      if (!document.hidden && !focused && cards.length > columns) advance();
+    }, interval);
+    new ResizeObserver(measure).observe(carousel.querySelector('.card-carousel__viewport')!);
+    measure();
+  });
+</script>

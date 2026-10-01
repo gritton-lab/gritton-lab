@@ -3,6 +3,10 @@ title: Lab receives NSF Frontiers award
 date: 2023-09-01
 category: grant
 summary: A four-year NSF Neural and Cognitive Systems grant to study how the brain performs complex scene analysis.
+image: "/images/projects/auditory-scenes/spatial-sound-arena.png"
+imageAlt: "Experimental arena with speakers positioned around the subject for spatial sound research"
+imageCaption: "The lab’s spatial sound research setup, from the auditory scene analysis project."
+imageFit: "contain"
 ---
 
 The lab received a 4-year National Science Foundation Neural and Cognitive Systems grant to study how

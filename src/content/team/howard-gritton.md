@@ -3,7 +3,7 @@ name: Howard J. Gritton, PhD
 group: pi
 role: Principal Investigator
 program: Department of Comparative Biosciences
-photo: /images/uploads/howard-gritton.jpeg
+photo: /images/lab/howard-gritton.webp
 email: hgritton@illinois.edu
 phone: 1-217-265-0127
 links:

@@ -2,6 +2,8 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import PageHero from '../../components/PageHero.astro';
+import LabPhotos from '../../components/LabPhotos.astro';
+import { labPhotos } from '../../data/labPhotos';
 import SectionHeading from '../../components/SectionHeading.astro';
 import Card from '../../components/Card.astro';
 import CtaBand from '../../components/CtaBand.astro';
@@ -44,6 +46,7 @@ const alumni = team.filter((person) => person.data.group === 'alumni');
   description="The neuroscientists, bioengineers, and computational researchers of the Gritton Lab."
 >
   <PageHero
+    class="lab-intro"
     eyebrow="People"
     title="The people behind the work."
     lede="We are neuroscientists, bioengineers, and computational researchers working together to understand how neural activity becomes attention, learning, and behavior."
@@ -52,7 +55,9 @@ const alumni = team.filter((person) => person.data.group === 'alumni');
       { label: 'Institution', value: 'Illinois Urbana-Champaign' },
       { label: 'Currently recruiting', value: 'Yes' },
     ]}
-  />
+  >
+    <LabPhotos slot="media" photos={[labPhotos.symposium]} />
+  </PageHero>
 
   {
     pi && (
@@ -152,6 +157,7 @@ const alumni = team.filter((person) => person.data.group === 'alumni');
   <CtaBand
     eyebrow="Join the network"
     title="Bring a new signal into the lab."
+    accent="into the lab."
     body="We welcome curious researchers who want to connect precise experiments with consequential questions about the brain and behavior."
     links={[
       { label: 'Explore lab positions', href: '/lab-positions', primary: true },
@@ -184,7 +190,7 @@ const alumni = team.filter((person) => person.data.group === 'alumni');
   }
 
   .pi__placeholder {
-    background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
+    background: var(--paper);
   }
 
   .pi__name {

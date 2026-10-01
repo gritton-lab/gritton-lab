@@ -1,0 +1,65 @@
+---
+interface Props {
+  variant?: 'network' | 'signals' | 'disruption';
+}
+
+const { variant = 'network' } = Astro.props;
+const traces = Array.from({ length: 5 }, (_, index) => Array.from({ length: 111 }, (_, step) => {
+  const x = step * 4;
+  const transition = Math.max(0, Math.min(1, (x - 155) / 155));
+  const phase = variant === 'disruption' ? transition * index * 1.5 : (1 - transition) * index * 1.5;
+  const amplitude = variant === 'disruption' ? 14 + transition * (index % 2 ? 11 : -7) : 14 + (1 - transition) * 8;
+  const y = 58 + index * 40 + Math.sin(x * 0.045 + phase) * amplitude;
+  return `${x.toFixed(1)},${y.toFixed(1)}`;
+}).join(' '));
+
+const nodes = [
+  { x: 52, y: 86, r: 5 }, { x: 100, y: 205, r: 6 },
+  { x: 185, y: 52, r: 4 }, { x: 222, y: 146, r: 9 },
+  { x: 296, y: 225, r: 4 }, { x: 371, y: 83, r: 6 },
+  { x: 397, y: 194, r: 5 },
+];
+const paths = [
+  'M52 86C110 68 145 127 222 146', 'M100 205C151 209 167 159 222 146',
+  'M185 52C222 72 193 111 222 146', 'M222 146C266 137 307 61 371 83',
+  'M222 146C271 156 255 217 296 225', 'M222 146C287 186 334 161 397 194',
+  'M52 86C52 146 116 134 100 205', 'M185 52C258 13 345 27 371 83',
+  'M296 225C336 251 382 243 397 194', 'M371 83C409 102 358 156 397 194',
+];
+---
+
+<div class:list={['band-artwork', `band-artwork--${variant}`]} aria-hidden="true">
+  <svg viewBox="0 0 440 280" fill="none">
+    {[60, 140, 220].map(y => <path d={`M0 ${y}H440`} stroke="var(--art-line)" stroke-opacity="0.07" />)}
+    {[60, 140, 220, 300, 380].map(x => <path d={`M${x} 20V260`} stroke="var(--art-line)" stroke-opacity="0.07" />)}
+    {variant === 'network' ? (
+      <>
+        {paths.map((path, i) => <path d={path} stroke="var(--art-line)" stroke-width={i < 6 ? 1.4 : 1} stroke-opacity={i < 6 ? 0.65 : 0.22} />)}
+        <circle cx="222" cy="146" r="26" stroke="var(--art-line)" stroke-opacity="0.4" />
+        <circle cx="222" cy="146" r="43" stroke="var(--art-line)" stroke-opacity="0.12" />
+        {nodes.map(node => (
+          <>
+            <circle cx={node.x} cy={node.y} r={node.r + 7} fill="var(--art-line)" fill-opacity="0.06" />
+            <circle cx={node.x} cy={node.y} r={node.r} fill="var(--panel-bg)" stroke="var(--art-line)" stroke-width="1.5" />
+            <circle cx={node.x} cy={node.y} r="2" fill="var(--art-highlight)" />
+          </>
+        ))}
+      </>
+    ) : (
+      <>
+        {traces.map((points, i) => <polyline points={points} stroke="var(--art-line)" stroke-width={i === 2 ? 2 : 1.25} stroke-opacity={i === 2 ? 0.95 : 0.45} />)}
+        <path d="M220 24V256" stroke="var(--art-line)" stroke-opacity="0.3" stroke-dasharray="3 6" />
+        <path d="M214 24H226M214 256H226" stroke="var(--art-line)" stroke-opacity="0.65" />
+        <circle cx="220" cy="140" r="22" fill="var(--panel-bg)" stroke="var(--art-line)" stroke-opacity="0.55" />
+        {variant === 'disruption'
+          ? <path d="M210 140H217L221 132L225 148L229 140H231" stroke="var(--art-highlight)" stroke-width="1.5" />
+          : <path d="M210 140H230M224 134L230 140L224 146" stroke="var(--art-highlight)" stroke-width="1.5" />}
+      </>
+    )}
+  </svg>
+</div>
+
+<style>
+  .band-artwork { min-width: 0; width: 100%; }
+  .band-artwork svg { display: block; width: 100%; }
+</style>

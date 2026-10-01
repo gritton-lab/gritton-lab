@@ -33,12 +33,12 @@ export const CATEGORY_ICON: Record<NewsCategory, string> = {
     '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
 };
 
-// Gradients for category panels; labels sit on a dark overlay.
-export const CATEGORY_STYLE: Record<NewsCategory, { from: string; to: string }> = {
-  presentation: { from: '#3b83d9', to: '#1b3f6f' },
-  visit: { from: '#ed7444', to: '#713826' },
-  milestone: { from: '#2db585', to: '#145845' },
-  award: { from: '#eea914', to: '#72520e' },
-  'new-member': { from: '#ea86ab', to: '#704158' },
-  grant: { from: '#148d14', to: '#08440e' },
+// Solid category panels keep white icons and labels legible.
+export const CATEGORY_COLOR: Record<NewsCategory, string> = {
+  presentation: '#1b3f6f',
+  visit: '#713826',
+  milestone: '#145845',
+  award: '#72520e',
+  'new-member': '#704158',
+  grant: '#08440e',
 };

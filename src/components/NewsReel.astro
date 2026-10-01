@@ -1,5 +1,6 @@
 ---
-import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_STYLE, type NewsCategory } from '../lib/newsCategories';
+import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_COLOR, type NewsCategory } from '../lib/newsCategories';
+import NewsImageCredit from './NewsImageCredit.astro';
 
 interface Item {
   href: string;
@@ -14,6 +15,8 @@ interface Item {
   year: string;
   image?: string;
   imageAlt: string;
+  imageCaption?: string;
+  imageFit?: 'cover' | 'contain';
   /** Vertical `object-position` that keeps the faces in the band. */
   focus?: string;
   /** Drives the colored panel shown in place of a missing photo. */
@@ -60,15 +63,15 @@ const per = Math.min(perBatch, items.length);
               {item.image ? (
                 <img
                   src={item.image}
-                  alt=""
-                  style={`object-position: center ${item.focus ?? '42%'}`}
+                  alt={item.imageAlt}
+                  style={{ objectPosition: `center ${item.focus ?? '42%'}`, objectFit: item.imageFit }}
                   loading={i === 0 ? 'eager' : 'lazy'}
                   decoding="async"
                 />
               ) : item.category ? (
                 <div
                   class="reel__hatch reel__hatch--tinted"
-                  style={`--cat-from:${CATEGORY_STYLE[item.category].from};--cat-to:${CATEGORY_STYLE[item.category].to}`}
+                  style={`--category-color:${CATEGORY_COLOR[item.category]}`}
                   aria-hidden="true"
                 >
                   <svg
@@ -101,6 +104,8 @@ const per = Math.min(perBatch, items.length);
               <p class="reel__date">{item.date}</p>
               <p class="reel__title">{item.title}</p>
               {item.summary && <p class="reel__summary">{item.summary}</p>}
+              {item.imageCaption && <p class="reel__caption">{item.imageCaption}</p>}
+              {item.image && <NewsImageCredit image={item.image} inactive={i !== 0} />}
               <a class="reel__more" href={item.href} tabindex={i === 0 ? undefined : '-1'}>
                 Read the story
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -218,6 +223,12 @@ const per = Math.min(perBatch, items.length);
     pointer-events: auto;
   }
 
+  .reel.is-restoring .reel__slide,
+  .reel.is-restoring .reel__brief,
+  .reel.is-restoring .reel__rail--run {
+    transition: none;
+  }
+
   .reel__slide img {
     display: block;
     width: 100%;
@@ -232,11 +243,11 @@ const per = Math.min(perBatch, items.length);
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: repeating-linear-gradient(135deg, var(--paper) 0 10px, var(--paper-deep) 10px 20px);
+    background: var(--paper);
   }
 
   .reel__hatch--tinted {
-    background: linear-gradient(135deg, var(--cat-from), var(--cat-to));
+    background: var(--category-color, var(--ink-deep));
   }
 
   .reel__slide:focus-visible {
@@ -285,6 +296,13 @@ const per = Math.min(perBatch, items.length);
     color: var(--ink-soft);
     font-size: 0.92rem;
     line-height: 1.6;
+  }
+
+  .reel__caption {
+    margin-top: 0.75rem;
+    color: var(--ink-muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
   }
 
   .reel__more {
@@ -532,13 +550,14 @@ const per = Math.min(perBatch, items.length);
     };
 
     /* Use a timer so interrupted transitions cannot leave the axis hidden. */
-    const turnTo = (next: number) => {
+    const turnTo = (next: number, immediate = false) => {
       if (next === batch) return;
       batch = next;
       window.clearTimeout(turning);
 
-      if (calm.matches) {
+      if (calm.matches || immediate) {
         fill();
+        axis.classList.remove('is-turning');
         return;
       }
 
@@ -551,7 +570,7 @@ const per = Math.min(perBatch, items.length);
     };
 
     /** `dir` is +1 forward, -1 back; it decides which way the pictures move. */
-    const go = (to: number, dir: number) => {
+    const go = (to: number, dir: number, immediate = false) => {
       const target = (to + slides.length) % slides.length;
       if (target === index) return;
 
@@ -575,10 +594,10 @@ const per = Math.min(perBatch, items.length);
       const newBrief = briefs[target];
       oldBrief.classList.remove('is-active');
       oldBrief.setAttribute('aria-hidden', 'true');
-      oldBrief.querySelector('a')?.setAttribute('tabindex', '-1');
+      oldBrief.querySelectorAll('a').forEach((link) => link.setAttribute('tabindex', '-1'));
       newBrief.classList.add('is-active');
       newBrief.removeAttribute('aria-hidden');
-      newBrief.querySelector('a')?.removeAttribute('tabindex');
+      newBrief.querySelectorAll('a').forEach((link) => link.removeAttribute('tabindex'));
 
       stops[index].removeAttribute('aria-current');
       stops[target].setAttribute('aria-current', 'true');
@@ -586,7 +605,7 @@ const per = Math.min(perBatch, items.length);
       index = target;
       elapsed = 0;
       count.textContent = String(index + 1).padStart(2, '0');
-      turnTo(Math.floor(index / per));
+      turnTo(Math.floor(index / per), immediate);
       paint();
     };
 
@@ -630,8 +649,60 @@ const per = Math.min(perBatch, items.length);
       requestAnimationFrame(frame);
     };
 
+    // Pass playback only to the next archive page in this tab. A fresh visit
+    // still starts normally, and a changed story order is matched by URL.
+    const storageKey = 'gritton-news-reel-pagination-v1';
+    const path = (url: URL) => url.pathname.replace(/\/$/, '') || '/';
+    document.querySelectorAll<HTMLAnchorElement>('[data-news-pagination] a').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target && link.target !== '_self') return;
+        const destination = new URL(link.href);
+        if (destination.origin !== location.origin) return;
+
+        try {
+          sessionStorage.setItem(storageKey, JSON.stringify({
+            destination: path(destination),
+            story: slides[index].getAttribute('href'),
+            elapsed: elapsed + (playing && last !== null ? performance.now() - last : 0),
+            playing,
+            savedAt: Date.now(),
+          }));
+        } catch {
+          // Pagination still works if browser storage is unavailable.
+        }
+      });
+    });
+
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      sessionStorage.removeItem(storageKey);
+      if (saved) {
+        const state = JSON.parse(saved);
+        const age = Date.now() - state.savedAt;
+        const target = slides.findIndex((slide) => slide.getAttribute('href') === state.story);
+        if (state.destination === path(new URL(location.href)) && target >= 0 &&
+            typeof state.playing === 'boolean' && Number.isFinite(state.elapsed) && state.elapsed >= 0 &&
+            Number.isFinite(age) && age >= 0 && age < 60_000) {
+          playing = state.playing && !calm.matches;
+          const progress = state.elapsed + (playing ? age : 0);
+          const advances = playing ? Math.floor(progress / interval) : 0;
+          reel.classList.add('is-restoring');
+          go((target + advances) % slides.length, 1, true);
+          elapsed = progress % interval;
+        }
+      }
+    } catch {
+      // Ignore stale or invalid state and use the default first story.
+    }
+
     fill();
     setPlaying(playing);
+    // Commit the restored slide without animating from the default first one.
+    if (reel.classList.contains('is-restoring')) {
+      void reel.offsetWidth;
+      reel.classList.remove('is-restoring');
+    }
     requestAnimationFrame(frame);
   };
 

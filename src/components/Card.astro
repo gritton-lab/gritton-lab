@@ -1,6 +1,6 @@
 ---
 /** Media: cover-cropped photos, contained figures, or top-aligned 4:5 portraits. */
-import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_STYLE, type NewsCategory } from '../lib/newsCategories';
+import { CATEGORY_ICON, CATEGORY_LABEL, CATEGORY_COLOR, type NewsCategory } from '../lib/newsCategories';
 
 interface Props {
   href: string;
@@ -9,6 +9,8 @@ interface Props {
   summary?: string;
   image?: string;
   imageAlt?: string;
+  imageFit?: 'cover' | 'contain';
+  imageFocus?: string;
   media?: 'photo' | 'figure' | 'portrait';
   /** Shown in the placeholder in place of "Gritton Lab" when there's no image. */
   category?: NewsCategory;
@@ -27,6 +29,8 @@ const {
   summary,
   image,
   imageAlt = '',
+  imageFit,
+  imageFocus,
   media = 'photo',
   category,
   tags = [],
@@ -36,7 +40,7 @@ const {
 } = Astro.props;
 
 const placeholderStyle = category
-  ? `--cat-from:${CATEGORY_STYLE[category].from};--cat-to:${CATEGORY_STYLE[category].to}`
+  ? `--category-color:${CATEGORY_COLOR[category]}`
   : undefined;
 ---
 
@@ -50,7 +54,7 @@ const placeholderStyle = category
           media === 'portrait' && 'card__media--portrait',
         ]}
       >
-        <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
+        <img src={image} alt={imageAlt} style={{ objectFit: imageFit, objectPosition: imageFocus ? `center ${imageFocus}` : undefined }} loading="lazy" decoding="async" />
       </div>
     ) : (
       <div

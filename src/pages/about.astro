@@ -2,10 +2,13 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
+import FigureBand from '../components/FigureBand.astro';
+import { aboutPhotos } from '../data/photoBands';
+import LabPhotos from '../components/LabPhotos.astro';
+import { labPhotos } from '../data/labPhotos';
 import SectionHeading from '../components/SectionHeading.astro';
 import CtaBand from '../components/CtaBand.astro';
 import StatementBand from '../components/StatementBand.astro';
-import FigureBand from '../components/FigureBand.astro';
 import home from '../data/home.json';
 
 const team = await getCollection('team');
@@ -33,6 +36,7 @@ const approaches = [
   description="How the Gritton Lab works: the methods, the standing research interests, and the people behind them."
 >
   <PageHero
+    class="lab-intro"
     eyebrow="About"
     title="Inside the Gritton Lab."
     lede="Neuroscientists, bioengineers, and computational researchers in the Department of Comparative Biosciences at the University of Illinois Urbana-Champaign, working the same problem from different directions."
@@ -41,7 +45,9 @@ const approaches = [
       { label: 'Active projects', value: String(projects.length) },
       { label: 'Publications', value: String(publications.length) },
     ]}
-  />
+  >
+    <LabPhotos slot="media" photos={[labPhotos.recordings]} />
+  </PageHero>
 
   <section class="page-section">
     <div class="container-page">
@@ -70,6 +76,7 @@ const approaches = [
   <StatementBand
     eyebrow="Why it matters"
     statement="Disruption in these systems is where neuropsychiatric illness begins."
+    accent="neuropsychiatric illness begins."
     stats={[
       { label: 'Neuromodulators studied', value: 'ACh · DA · NE' },
       { label: 'Disease context', value: "Autism · Parkinson's · Alzheimer's" },
@@ -92,14 +99,7 @@ const approaches = [
     </div>
   </section>
 
-
-  <FigureBand
-    image="/images/uploads/bioe-symposium.jpeg"
-    alt="Gritton Lab researchers at the Bioengineering Graduate Research Symposium"
-    label="Bioengineering Graduate Research Symposium"
-    caption="The lab presents together — every project is owned end to end by the researcher running it."
-    focus="56% center"
-  />
+  <FigureBand slides={aboutPhotos} />
 
   <section class="page-section">
     <div class="container-page">
@@ -127,6 +127,7 @@ const approaches = [
   <CtaBand
     eyebrow="The lab"
     title="A small group, deliberately."
+    accent="deliberately."
     body="Projects are run by researchers who own them end to end, from surgery and recording through analysis and writing."
     links={[
       { label: 'Meet the team', href: '/people', primary: true },

@@ -3,8 +3,12 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import Card from '../components/Card.astro';
-import StatementBand from '../components/StatementBand.astro';
+import CardCarousel from '../components/CardCarousel.astro';
+import NeuralScene from '../components/NeuralScene.astro';
+import CircuitQuestion from '../components/CircuitQuestion.astro';
+import PublicationCarousel from '../components/PublicationCarousel.astro';
 import FigureBand from '../components/FigureBand.astro';
+import { homePhotos } from '../data/photoBands';
 import home from '../data/home.json';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
@@ -17,9 +21,7 @@ const news = (await getCollection('news', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
 
-const featuredProjects = projects.slice(0, 3);
-const recentPublications = publications.slice(0, 5);
-const latestNews = news.slice(0, 3);
+const latestNews = news.slice(0, 6);
 
 /* Split the shared intro into lead and supporting paragraphs. */
 const introBreak = home.intro.indexOf('However');
@@ -35,19 +37,11 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
 
 <Base description={home.heroSubtext}>
   <section class="hero" aria-label="Gritton Lab">
-    <img
-      class="hero__image"
-      src="/images/uploads/bioe-symposium.jpeg"
-      alt="Gritton Lab researchers at the Bioengineering Graduate Research Symposium"
-      width="1400"
-      height="1050"
-      fetchpriority="high"
-    />
-    <div class="hero__wash" aria-hidden="true"></div>
+    <NeuralScene />
 
     <div class="container-page hero__content">
       <p class="hero__eyebrow">Neural circuits in focus</p>
-      <h1 class="hero__title">How does a brain decide what matters?</h1>
+      <h1 class="hero__title">How does a brain <span>decide what matters?</span></h1>
       <p class="hero__subtext">{home.heroSubtext}</p>
 
       <div class="actions hero__actions">
@@ -96,10 +90,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
     </div>
   </section>
 
-  <StatementBand
-    eyebrow="The question"
-    statement="How do thousands of cells act in unison at exactly the right moment?"
-  />
+  <CircuitQuestion />
 
   <section class="page-section">
     <div class="container-page">
@@ -111,9 +102,9 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
         actionLabel="All projects"
       />
 
-      <div class="section-body card-grid card-grid--3">
+      <CardCarousel label="Research projects">
         {
-          featuredProjects.map((project) => (
+          projects.map((project) => (
             <Card
               href={`/projects/${project.id}`}
               eyebrow="Research project"
@@ -126,17 +117,11 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
             />
           ))
         }
-      </div>
+      </CardCarousel>
     </div>
   </section>
 
-  <FigureBand
-    image="/images/uploads/martin-cns.jpeg"
-    alt="Martin presenting lab research at the Cognitive Neuroscience Society meeting"
-    label="Cognitive Neuroscience Society"
-    caption="Presenting work on cortical circuit dynamics in spatially directed attention."
-    focus="60% center"
-  />
+  <FigureBand slides={homePhotos} />
 
   <section class="page-section">
     <div class="container-page">
@@ -147,9 +132,9 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
         actionLabel="All publications"
       />
 
-      <ol class="section-body ruled-list">
+      <PublicationCarousel>
         {
-          recentPublications.map((publication, index) => (
+          publications.map((publication, index) => (
             <li class="ruled-row ruled-row--indexed">
               <span class="ruled-row__index">{String(index + 1).padStart(2, '0')}</span>
               <div class="ruled-row__body">
@@ -175,7 +160,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
             </li>
           ))
         }
-      </ol>
+      </PublicationCarousel>
     </div>
   </section>
 
@@ -188,7 +173,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
         actionLabel="All news"
       />
 
-      <div class="section-body card-grid card-grid--3">
+      <CardCarousel label="Latest lab news" interval={9000}>
         {
           latestNews.map((story) => (
             <Card
@@ -198,12 +183,14 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
               summary={story.data.summary}
               image={story.data.image}
               imageAlt={story.data.imageAlt}
+              imageFit={story.data.imageFit}
+              imageFocus={story.data.imageFocus}
               category={story.data.category}
               footLabel="Read story"
             />
           ))
         }
-      </div>
+      </CardCarousel>
     </div>
   </section>
 
@@ -213,33 +200,18 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
   .hero {
     position: relative;
     display: grid;
-    min-height: clamp(30rem, 68vh, 42rem);
-    align-content: end;
+    min-height: 100svh;
+    align-content: center;
     overflow: hidden;
-    background: var(--ink-deep);
+    background: var(--panel-bg);
     color: #fff;
   }
-
-  .hero__image,
-  .hero__wash {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .hero__image {
-    object-fit: cover;
-    object-position: 56% center;
-    filter: saturate(0.6) contrast(1.05);
-  }
-
-  .hero__wash { background: var(--hero-wash); }
 
   .hero__content {
     position: relative;
     z-index: 2;
-    padding-block: clamp(4rem, 10vw, 7rem) clamp(2.5rem, 5vw, 4rem);
+    padding-block: 6rem 9rem;
+    pointer-events: none;
   }
 
   .hero__eyebrow {
@@ -247,10 +219,10 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
     align-items: center;
     gap: 0.8rem;
     margin-bottom: 1.4rem;
-    color: var(--sky);
+    color: var(--panel-muted);
     font-family: var(--font-mono);
     font-size: 0.66rem;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.15em;
     text-transform: uppercase;
   }
@@ -264,23 +236,39 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
   }
 
   .hero__title {
-    max-width: 16ch;
-    color: #fff;
-    font-size: clamp(2.4rem, 5.2vw, 4rem);
+    max-width: 12ch;
+    color: var(--panel-text);
+    font-size: clamp(3.2rem, 5.4vw, 6rem);
     font-weight: 600;
     letter-spacing: -0.028em;
-    line-height: 1.03;
+    line-height: 1.02;
   }
+
+  .hero__title span { color: var(--panel-accent); }
 
   .hero__subtext {
-    max-width: 54ch;
+    max-width: 43ch;
     margin-top: 1.5rem;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: clamp(1rem, 1.3vw, 1.12rem);
-    line-height: 1.7;
+    color: var(--panel-muted);
+    font-size: clamp(0.95rem, 1.1vw, 1.08rem);
+    line-height: 1.8;
   }
 
-  .hero__actions { margin-top: var(--space-lg); }
+  .hero__actions { margin-top: 2rem; }
+  .hero__actions a { pointer-events: auto; }
+
+  .hero__actions .button { min-height: 3rem; font-weight: 600; background: var(--panel-text); border-color: var(--panel-text); color: var(--panel-bg); }
+  .hero__actions .button:hover { background: var(--art-line); border-color: var(--art-line); color: var(--panel-bg); }
+
+  @media (max-width: 700px) {
+    .hero { min-height: max(100svh, 52rem); align-content: end; }
+    .hero__content { padding-block: 15rem 6rem; }
+    .hero__title { max-width: 13ch; font-size: clamp(2.8rem, 9vw, 3.8rem); }
+    .hero__subtext { max-width: 38ch; font-size: 0.92rem; }
+    .hero__eyebrow { margin-bottom: 1rem; }
+    .hero__actions { gap: 0.65rem; }
+    .hero__actions .button { padding-inline: 0.9rem; font-size: 0.85rem; }
+  }
 
   /* --------------------------------------------------------------- Premise */
 
@@ -301,7 +289,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
     padding-block: 0.7rem;
     color: var(--ink);
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.45;
   }
 

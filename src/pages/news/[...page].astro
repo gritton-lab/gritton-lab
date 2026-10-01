@@ -55,7 +55,9 @@ const reelItems = (await getCollection('news', ({ data }) => !data.draft))
     year: String(post.data.date.getUTCFullYear()),
     image: post.data.image,
     imageAlt: post.data.imageAlt,
-    focus: FACES[post.id] ?? '42%',
+    imageCaption: post.data.imageCaption,
+    imageFit: post.data.imageFit,
+    focus: post.data.imageFocus ?? FACES[post.id] ?? '42%',
     category: post.data.category,
   }));
 ---
@@ -87,6 +89,8 @@ const reelItems = (await getCollection('news', ({ data }) => !data.draft))
               summary={post.data.summary}
               image={post.data.image}
               imageAlt={post.data.imageAlt}
+              imageFit={post.data.imageFit}
+              imageFocus={post.data.imageFocus}
               category={post.data.category}
               footLabel="Read story"
             />
@@ -96,7 +100,7 @@ const reelItems = (await getCollection('news', ({ data }) => !data.draft))
 
       {
         page.lastPage > 1 && (
-          <nav class="pagination" aria-label="News pages">
+          <nav class="pagination" aria-label="News pages" data-news-pagination>
             {page.url.prev ? (
               <a class="button" href={page.url.prev}>Newer</a>
             ) : (
@@ -119,6 +123,7 @@ const reelItems = (await getCollection('news', ({ data }) => !data.draft))
   <CtaBand
     eyebrow="Elsewhere"
     title="Follow the research itself."
+    accent="the research itself."
     body="The projects behind these stories, and the papers they turned into."
     links={[
       { label: 'Research projects', href: '/projects', primary: true },

@@ -1,0 +1,65 @@
+---
+const traces = Array.from({ length: 7 }, (_, index) => {
+  const points = Array.from({ length: 151 }, (_, step) => {
+    const x = step * 3.2;
+    const blend = Math.max(0, Math.min(1, (x - 175) / 175));
+    const separate = 54 + index * 38 + Math.sin(x * 0.055 + index * 1.7) * 12;
+    const together = 168 + Math.sin(x * 0.043) * 43;
+    return `${x.toFixed(1)},${(separate * (1 - blend) + together * blend).toFixed(1)}`;
+  });
+  return points.join(' ');
+});
+---
+
+<section class="circuit-question" aria-labelledby="circuit-question-title">
+  <div class="circuit-question__copy">
+    <p class="circuit-question__eyebrow"><span></span> The question that drives us</p>
+    <h2 id="circuit-question-title">Thousands of cells.<br /><em>One precise moment.</em></h2>
+    <p class="circuit-question__question">How do thousands of cells act in unison at exactly the right moment?</p>
+    <a class="circuit-question__link" href="/projects">Explore the science <span aria-hidden="true">↗</span></a>
+  </div>
+  <div class="circuit-question__figure" aria-hidden="true">
+    <svg viewBox="0 0 480 330" fill="none">
+      {[54, 92, 130, 168, 206, 244, 282].map(y => <path d={`M0 ${y}H480`} stroke="var(--art-line)" stroke-opacity="0.055" />)}
+      {[80, 160, 240, 320, 400].map(x => <path d={`M${x} 24V310`} stroke="var(--art-line)" stroke-opacity="0.055" />)}
+      {traces.map((points, i) => <polyline points={points} stroke="var(--art-line)" stroke-opacity={i === 3 ? 0.9 : 0.45} stroke-width={i === 3 ? 2 : 1.2} />)}
+      <path d="M351 31V297" stroke="var(--art-line)" stroke-opacity="0.4" stroke-dasharray="3 6" />
+      <circle cx="351" cy="192" r="5" fill="var(--art-highlight)" />
+      <circle cx="351" cy="192" r="13" stroke="var(--art-line)" stroke-opacity="0.4" />
+      <circle cx="351" cy="192" r="23" stroke="var(--art-line)" stroke-opacity="0.15" />
+      <path d="M345 31H357M345 297H357" stroke="var(--art-line)" />
+    </svg>
+  </div>
+</section>
+
+<style>
+  .circuit-question {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    width: min(var(--measure), calc(100% - var(--rail) * 2));
+    margin-inline: auto;
+    padding: clamp(2rem, 4.5vw, 4rem);
+    overflow: hidden;
+    color: #fff;
+    background: var(--panel-bg);
+    border-top: 1px solid var(--panel-line);
+  }
+  .circuit-question__eyebrow { display: flex; align-items: center; gap: 0.7rem; color: var(--panel-muted); font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.13em; text-transform: uppercase; }
+  .circuit-question__eyebrow span { width: 5px; height: 5px; border-radius: 50%; background: var(--panel-accent); box-shadow: 0 0 10px var(--panel-line); }
+  .circuit-question h2 { margin-top: 1.75rem; color: var(--panel-text); font-size: clamp(1.8rem, 3.3vw, 3.1rem); font-weight: 600; line-height: 1.12; letter-spacing: -0.02em; text-wrap: initial; }
+  .circuit-question h2 em { color: var(--panel-accent); font-style: normal; }
+  .circuit-question__question { max-width: 34ch; margin-top: 1.5rem; color: var(--panel-muted); font-size: 0.95rem; line-height: 1.7; }
+  .circuit-question__link { display: inline-flex; align-items: center; gap: 1.5rem; margin-top: 1.75rem; border-bottom: 1px solid var(--panel-line); padding-bottom: 0.4rem; color: var(--panel-text); font-size: 0.78rem; text-decoration: none; }
+  .circuit-question__link:hover { color: white; border-color: var(--panel-accent); }
+  .circuit-question__link:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 5px; }
+  .circuit-question__figure { min-width: 0; }
+  .circuit-question__figure svg { display: block; width: 100%; }
+  @media (max-width: 700px) {
+    .circuit-question { grid-template-columns: 1fr; }
+    .circuit-question h2 { font-size: clamp(1.8rem, 7vw, 2.6rem); }
+    .circuit-question__figure { max-width: 28rem; }
+  }
+</style>

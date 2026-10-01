@@ -1,0 +1,38 @@
+<div class="neural-scene" data-neural-scene>
+  <canvas class="neural-scene__canvas" tabindex="0" role="img"
+    aria-label="Interactive three-dimensional neural network. Drag or use arrow keys to rotate. Use plus and minus to zoom. Click or press Enter to send a signal. Press Space to pause motion, or R to reset."
+  >An illustrated network of branching neurons with signals traveling between them.</canvas>
+  <p class="neural-scene__hint" aria-hidden="true"><span>↔</span> Drag to explore</p>
+</div>
+
+<style>
+  .neural-scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--panel-bg);
+  }
+  .neural-scene__canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; }
+  .neural-scene__canvas:active { cursor: grabbing; }
+  .neural-scene__canvas:focus-visible { outline: 1px solid var(--panel-accent); outline-offset: -5px; }
+  .neural-scene__hint {
+    position: absolute;
+    z-index: 3;
+    right: var(--rail);
+    bottom: 2.25rem;
+    color: var(--panel-muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    pointer-events: none;
+    user-select: none;
+  }
+  .neural-scene__hint span { margin-right: 0.5rem; color: var(--panel-accent); }
+  @media (max-width: 700px) {
+    .neural-scene__hint { right: var(--rail); bottom: 1.5rem; }
+  }
+</style>
+
+<script>
+  import { createNeuralScene } from '../lib/neuralScene';
+  document.querySelectorAll<HTMLElement>('[data-neural-scene]').forEach(createNeuralScene);
+</script>

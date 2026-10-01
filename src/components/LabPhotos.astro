@@ -1,0 +1,57 @@
+---
+interface Props {
+  photos: {
+    src: string;
+    alt: string;
+    width: number;
+    height: number;
+    focus?: string;
+    caption?: string;
+  }[];
+}
+
+const { photos } = Astro.props;
+---
+
+<div class:list={['lab-photos', photos.length > 1 && 'lab-photos--pair', photos.length === 1 && photos[0].height > photos[0].width && 'lab-photos--portrait']}>
+  {photos.map((photo) => (
+    <figure>
+    <img
+      src={photo.src}
+      alt={photo.alt}
+      width={photo.width}
+      height={photo.height}
+      style={{ objectPosition: photo.focus }}
+      decoding="async"
+    />
+    {photo.caption && <figcaption>{photo.caption}</figcaption>}
+    </figure>
+  ))}
+</div>
+
+<style>
+  .lab-photos {
+    display: grid;
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  .lab-photos img {
+    display: block;
+    width: 100%;
+    height: clamp(18rem, 28vw, 23rem);
+    object-fit: cover;
+  }
+
+  .lab-photos--pair { grid-template-columns: minmax(0, 2.25fr) minmax(0, 1fr); }
+  .lab-photos figure { margin: 0; min-width: 0; }
+  .lab-photos figcaption { margin-top: 0.75rem; color: var(--ink-muted); font-size: 0.8rem; line-height: 1.5; }
+  .lab-photos--portrait { max-width: 20rem; }
+  .lab-photos--portrait img { height: auto; }
+
+  @media (max-width: 600px) {
+    .lab-photos--portrait { max-width: 18rem; }
+    .lab-photos--pair { grid-template-columns: minmax(0, 1fr); }
+    .lab-photos img { height: auto; }
+    .lab-photos--pair figure + figure img { max-height: 28rem; }
+  }
+</style>

@@ -1,0 +1,115 @@
+---
+interface Props {
+  image?: string;
+  imageAlt: string;
+  frames: { label: string; value: string }[];
+}
+
+const { image, imageAlt, frames } = Astro.props;
+const related = [
+  { href: '/publications', label: 'Publications from this work' },
+  { href: '/people', label: 'The researchers involved' },
+  { href: '/lab-positions', label: 'Join this project' },
+];
+---
+
+<div class="project-overview">
+  <div class="container-page">
+    <nav class="project-nav" aria-label="On this project page">
+      <span class="meta">Explore the project</span>
+      <a href="#overview">01 <span>Overview</span></a>
+      {image && <a href="#research-figure">02 <span>Research figure</span></a>}
+      <a href="#related">{image ? '03' : '02'} <span>Related</span></a>
+    </nav>
+
+    <section class="overview-grid" id="overview" aria-labelledby="overview-title">
+      <div class="overview-copy">
+        <p class="eyebrow">Research project</p>
+        <h2 id="overview-title">Overview</h2>
+        <div class="prose-lab research-copy"><slot /></div>
+      </div>
+      {frames.length > 0 && (
+        <aside class="project-facts" aria-labelledby="facts-title">
+          <h2 class="eyebrow" id="facts-title">At a glance</h2>
+          <dl class="fact-grid">
+            {frames.map((frame, index) => (
+              <div class="fact-tile">
+                <dt><span class="fact-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{frame.label}</dt>
+                <dd>{frame.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </aside>
+      )}
+    </section>
+  </div>
+
+  {image && (
+    <section class="figure-section" id="research-figure" aria-labelledby="figure-title">
+      <div class="container-page">
+        <figure class="research-figure">
+          <div class="figure-heading">
+            <h2 class="eyebrow" id="figure-title">Research figure</h2>
+            <a class="figure-link" href={image} target="_blank" rel="noopener">View full size <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+          </div>
+          <a class="figure-image" href={image} target="_blank" rel="noopener" aria-label={`View ${imageAlt ? imageAlt.toLowerCase() : 'research figure'} at full size (opens in a new tab)`}>
+            <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
+          </a>
+          {imageAlt && <figcaption>{imageAlt}</figcaption>}
+        </figure>
+      </div>
+    </section>
+  )}
+
+  <section class="related-section container-page" id="related" aria-labelledby="related-title">
+    <h2 class="eyebrow" id="related-title">Related</h2>
+    <ul class="related-grid">
+      {related.map((link) => (
+        <li><a href={link.href}><span>{link.label}</span><span aria-hidden="true">↗</span></a></li>
+      ))}
+    </ul>
+  </section>
+</div>
+
+<style>
+  .project-overview { border-bottom: 1px solid var(--line); }
+  .project-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; border-block: 1px solid var(--line); padding-block: 1.1rem; }
+  .project-nav > span { margin-right: auto; }
+  .project-nav a { display: flex; gap: 0.6rem; color: var(--signal); font-family: var(--font-mono); font-size: 0.7rem; }
+  .project-nav a span { color: var(--ink); font-family: var(--font-sans); font-size: 0.88rem; }
+  .project-nav a:hover span { text-decoration: underline; text-underline-offset: 4px; }
+  section { scroll-margin-top: 2rem; }
+  .eyebrow { margin-bottom: 1rem; }
+  .overview-copy h2 { margin: 0; }
+  .overview-grid { display: grid; gap: var(--space-block); align-items: start; padding-block: var(--space-section); }
+  .research-copy { margin-top: 1.5rem; }
+  .research-copy :global(p:last-child) { border-left: 3px solid var(--signal); padding-left: 1.15rem; color: var(--ink-deep); }
+  .fact-grid { display: grid; gap: 1rem; }
+  .fact-tile { padding: clamp(1.1rem, 2vw, 1.5rem); background: var(--paper); border-top: 2px solid var(--ink-deep); }
+  .fact-tile dt { display: flex; gap: 0.8rem; align-items: baseline; color: var(--ink-muted); font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .fact-number { color: var(--signal); }
+  .fact-tile dd { margin-top: 0.65rem; color: var(--ink-deep); font-size: 1.05rem; line-height: 1.5; }
+  .figure-section { padding-block: var(--space-section); background: var(--paper); border-block: 1px solid var(--line); }
+  .research-figure { margin: 0; padding: clamp(1rem, 2.5vw, 2rem); background: white; }
+  .figure-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; margin-bottom: 1.5rem; }
+  .figure-heading h2 { margin: 0; }
+  .figure-link { display: inline-flex; gap: 0.5rem; color: var(--signal-dark); font-size: 0.8rem; font-weight: 500; }
+  .figure-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .figure-image { display: block; }
+  .figure-image img { display: block; width: auto; max-width: 100%; height: auto; max-height: 34rem; margin-inline: auto; object-fit: contain; }
+  .figure-image:hover { outline: 2px solid var(--signal); outline-offset: 4px; }
+  figcaption { margin-top: 1.5rem; border-top: 1px solid var(--line); padding-top: 1rem; color: var(--ink-soft); font-size: 0.88rem; }
+  .related-section { padding-block: var(--space-block); }
+  .related-grid { display: grid; gap: var(--gap-grid); }
+  .related-grid a { display: flex; justify-content: space-between; align-items: center; gap: 1rem; height: 100%; border-top: 2px solid var(--ink-deep); padding: 1.3rem; background: var(--paper); font-size: 0.95rem; }
+  .related-grid a > span:last-child { color: var(--signal); }
+  .related-grid a:hover { background: var(--paper-deep); }
+  @media (min-width: 760px) {
+    .overview-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+    .related-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 759px) {
+    .project-nav { gap: 0.9rem 1.4rem; }
+    .project-nav > span { flex-basis: 100%; }
+  }
+</style>
