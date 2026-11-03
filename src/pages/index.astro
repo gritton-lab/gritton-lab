@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import Card from '../components/Card.astro';
 import CardCarousel from '../components/CardCarousel.astro';
-import NeuralScene from '../components/NeuralScene.astro';
+import AssemblyScene from '../components/AssemblyScene.astro';
 import CircuitQuestion from '../components/CircuitQuestion.astro';
 import PublicationCarousel from '../components/PublicationCarousel.astro';
 import FigureBand from '../components/FigureBand.astro';
@@ -37,7 +37,7 @@ const formatDate = (date: Date, precision: 'day' | 'month' = 'day') =>
 
 <Base description={home.heroSubtext}>
   <section class="hero" aria-label="Gritton Lab">
-    <NeuralScene />
+    <AssemblyScene />
 
     <div class="container-page hero__content">
       <p class="hero__eyebrow">Neural circuits in focus</p>
