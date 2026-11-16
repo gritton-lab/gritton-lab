@@ -1,59 +1,131 @@
 ---
+import {
+  BAND_MARKER, BAND_ROWS, NET_HUB, NET_LINKS, NET_NODES, NET_PRIMARY,
+  bandTracePoints, signalLength,
+  type ArtworkVariant,
+} from '../lib/bandArtwork';
+import { ATTENTION_STILL, SELECTOR_RADIUS, attentionFrame, selectorTransform } from '../lib/bandAttention';
+import { FIELD_CELLS, fieldFrame } from '../lib/bandField';
+import { ORBITS, ORBITS_STILL, ORBIT_CENTER, orbitTransform, orbitsFrame, trailPath } from '../lib/bandOrbits';
+import { RASTER_READOUT, RASTER_ROWS, RASTER_STILL, rasterFrame } from '../lib/bandRaster';
+
 interface Props {
-  variant?: 'network' | 'signals' | 'disruption';
+  variant?: ArtworkVariant;
 }
 
 const { variant = 'network' } = Astro.props;
-const traces = Array.from({ length: 5 }, (_, index) => Array.from({ length: 111 }, (_, step) => {
-  const x = step * 4;
-  const transition = Math.max(0, Math.min(1, (x - 155) / 155));
-  const phase = variant === 'disruption' ? transition * index * 1.5 : (1 - transition) * index * 1.5;
-  const amplitude = variant === 'disruption' ? 14 + transition * (index % 2 ? 11 : -7) : 14 + (1 - transition) * 8;
-  const y = 58 + index * 40 + Math.sin(x * 0.045 + phase) * amplitude;
-  return `${x.toFixed(1)},${y.toFixed(1)}`;
-}).join(' '));
-
-const nodes = [
-  { x: 52, y: 86, r: 5 }, { x: 100, y: 205, r: 6 },
-  { x: 185, y: 52, r: 4 }, { x: 222, y: 146, r: 9 },
-  { x: 296, y: 225, r: 4 }, { x: 371, y: 83, r: 6 },
-  { x: 397, y: 194, r: 5 },
-];
-const paths = [
-  'M52 86C110 68 145 127 222 146', 'M100 205C151 209 167 159 222 146',
-  'M185 52C222 72 193 111 222 146', 'M222 146C266 137 307 61 371 83',
-  'M222 146C271 156 255 217 296 225', 'M222 146C287 186 334 161 397 194',
-  'M52 86C52 146 116 134 100 205', 'M185 52C258 13 345 27 371 83',
-  'M296 225C336 251 382 243 397 194', 'M371 83C409 102 358 156 397 194',
-];
+// Each artwork is drawn here as a still frame; the script below sets the same artwork moving.
+const marker = BAND_MARKER;
+const hub = NET_NODES[NET_HUB];
+const traces = variant === 'signals' || variant === 'disruption' ? BAND_ROWS.map((_, index) => bandTracePoints(variant, index, 0)) : [];
+const raster = variant === 'raster' ? rasterFrame(RASTER_STILL) : null;
+const attention = variant === 'attention' ? attentionFrame(ATTENTION_STILL) : null;
+const field = variant === 'field' ? fieldFrame(0) : null;
+const orbits = variant === 'orbits' ? orbitsFrame(ORBITS_STILL) : null;
+const markerLine = (x: number) => `M${x} 24V256`;
+const markerCaps = (x: number) => `M${x - 6} 24H${x + 6}M${x - 6} 256H${x + 6}`;
 ---
 
-<div class:list={['band-artwork', `band-artwork--${variant}`]} aria-hidden="true">
+<div class:list={['band-artwork', `band-artwork--${variant}`]} aria-hidden="true" data-band-artwork={variant}>
   <svg viewBox="0 0 440 280" fill="none">
     {[60, 140, 220].map(y => <path d={`M0 ${y}H440`} stroke="var(--art-line)" stroke-opacity="0.07" />)}
     {[60, 140, 220, 300, 380].map(x => <path d={`M${x} 20V260`} stroke="var(--art-line)" stroke-opacity="0.07" />)}
-    {variant === 'network' ? (
+
+    {variant === 'network' && (
       <>
-        {paths.map((path, i) => <path d={path} stroke="var(--art-line)" stroke-width={i < 6 ? 1.4 : 1} stroke-opacity={i < 6 ? 0.65 : 0.22} />)}
-        <circle cx="222" cy="146" r="26" stroke="var(--art-line)" stroke-opacity="0.4" />
-        <circle cx="222" cy="146" r="43" stroke="var(--art-line)" stroke-opacity="0.12" />
-        {nodes.map(node => (
+        {NET_LINKS.map((link, i) => <path d={link.d} stroke="var(--art-line)" stroke-width={i < NET_PRIMARY ? 1.4 : 1} stroke-opacity={i < NET_PRIMARY ? 0.65 : 0.22} />)}
+        {/* one travelling signal per link: a soft glow under a bright core, hidden until the script runs */}
+        {NET_LINKS.map((link, i) => (
+          <g data-band-signal opacity="0" stroke="var(--art-highlight)" stroke-linecap="round" stroke-dasharray={`${signalLength(i)} 2`}>
+            <path d={link.d} pathLength="1" stroke-width="5" stroke-opacity="0.2" />
+            <path d={link.d} pathLength="1" stroke-width="1.8" />
+          </g>
+        ))}
+        <circle cx={hub.x} cy={hub.y} r="26" stroke="var(--art-line)" stroke-opacity="0.4" />
+        <circle cx={hub.x} cy={hub.y} r="43" stroke="var(--art-line)" stroke-opacity="0.12" />
+        {/* one ripple per hub link, opened each time that link's signal reaches the hub */}
+        {NET_LINKS.slice(0, NET_PRIMARY).map(() => <circle data-band-ripple cx={hub.x} cy={hub.y} r="12" stroke="var(--art-highlight)" stroke-opacity="0" />)}
+        {NET_NODES.map(node => (
           <>
-            <circle cx={node.x} cy={node.y} r={node.r + 7} fill="var(--art-line)" fill-opacity="0.06" />
+            <circle data-band-halo cx={node.x} cy={node.y} r={node.r + 7} fill="var(--art-line)" fill-opacity="0.06" />
             <circle cx={node.x} cy={node.y} r={node.r} fill="var(--panel-bg)" stroke="var(--art-line)" stroke-width="1.5" />
-            <circle cx={node.x} cy={node.y} r="2" fill="var(--art-highlight)" />
+            <circle data-band-core cx={node.x} cy={node.y} r="2" fill="var(--art-highlight)" />
           </>
         ))}
       </>
-    ) : (
+    )}
+
+    {(variant === 'signals' || variant === 'disruption') && (
       <>
-        {traces.map((points, i) => <polyline points={points} stroke="var(--art-line)" stroke-width={i === 2 ? 2 : 1.25} stroke-opacity={i === 2 ? 0.95 : 0.45} />)}
-        <path d="M220 24V256" stroke="var(--art-line)" stroke-opacity="0.3" stroke-dasharray="3 6" />
-        <path d="M214 24H226M214 256H226" stroke="var(--art-line)" stroke-opacity="0.65" />
-        <circle cx="220" cy="140" r="22" fill="var(--panel-bg)" stroke="var(--art-line)" stroke-opacity="0.55" />
-        {variant === 'disruption'
-          ? <path d="M210 140H217L221 132L225 148L229 140H231" stroke="var(--art-highlight)" stroke-width="1.5" />
-          : <path d="M210 140H230M224 134L230 140L224 146" stroke="var(--art-highlight)" stroke-width="1.5" />}
+        {traces.map((points, i) => <polyline data-band-trace points={points} stroke="var(--art-line)" stroke-width={i === 2 ? 2 : 1.25} stroke-opacity={i === 2 ? 0.95 : 0.45} />)}
+        <path d={markerLine(marker.x)} stroke="var(--art-line)" stroke-opacity="0.3" stroke-dasharray="3 6" />
+        <path d={markerCaps(marker.x)} stroke="var(--art-line)" stroke-opacity="0.65" />
+        {/* the ring the icon gives off: once per shared crest (signals) or once per shock (disruption) */}
+        <circle data-band-pulse cx={marker.x} cy={marker.y} r={marker.r} stroke="var(--art-highlight)" stroke-opacity="0" />
+        <circle cx={marker.x} cy={marker.y} r={marker.r} fill="var(--panel-bg)" stroke="var(--art-line)" stroke-opacity="0.55" />
+        <g data-band-icon>
+          {variant === 'disruption'
+            ? <path d="M210 140H217L221 132L225 148L229 140H231" stroke="var(--art-highlight)" stroke-width="1.5" />
+            : <path d="M210 140H230M224 134L230 140L224 146" stroke="var(--art-highlight)" stroke-width="1.5" />}
+        </g>
+      </>
+    )}
+
+    {raster && (
+      <>
+        <defs>
+          {/* spikes brighten as they near the readout */}
+          <linearGradient id="band-raster-approach" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={RASTER_READOUT.x} y2="0">
+            <stop offset="0" stop-color="var(--art-line)" stop-opacity="0.3" />
+            <stop offset="1" stop-color="var(--art-line)" stop-opacity="0.95" />
+          </linearGradient>
+        </defs>
+        <path data-raster-ticks d={raster.ticks} stroke="url(#band-raster-approach)" stroke-width="1.5" stroke-linecap="round" />
+        <polyline data-raster-output points={raster.output} stroke="var(--art-line)" stroke-width="1.8" stroke-opacity="0.9" stroke-linejoin="round" />
+        <path d={markerLine(RASTER_READOUT.x)} stroke="var(--art-line)" stroke-opacity="0.3" stroke-dasharray="3 6" />
+        <path d={markerCaps(RASTER_READOUT.x)} stroke="var(--art-line)" stroke-opacity="0.65" />
+        {RASTER_ROWS.map((y, i) => <circle data-raster-flash cx={RASTER_READOUT.x} cy={y} r={raster.flashes[i].radius} fill="var(--art-highlight)" fill-opacity={raster.flashes[i].alpha} />)}
+        <circle cx={RASTER_READOUT.x} cy={RASTER_READOUT.y} r="13" stroke="var(--art-line)" stroke-opacity="0.4" />
+        <circle cx={RASTER_READOUT.x} cy={RASTER_READOUT.y} r="23" stroke="var(--art-line)" stroke-opacity="0.15" />
+        <circle data-raster-pulse cx={RASTER_READOUT.x} cy={RASTER_READOUT.y} r={raster.pulseRadius} stroke="var(--art-highlight)" stroke-opacity={raster.pulseAlpha} />
+        <circle data-raster-dot cx={RASTER_READOUT.x} cy={RASTER_READOUT.y} r={raster.dotRadius} fill="var(--art-highlight)" />
+      </>
+    )}
+
+    {attention && (
+      <>
+        {attention.traces.map(points => <polyline data-attention-trace points={points} stroke="var(--art-line)" stroke-width="1.25" stroke-opacity="0.42" />)}
+        {/* the stretch of each trace that is getting through, drawn bright over the top */}
+        {attention.lit.map(points => <polyline data-attention-lit points={points} stroke="var(--art-line)" stroke-width="2" stroke-opacity="0.95" stroke-linejoin="round" />)}
+        <path d={markerLine(marker.x)} stroke="var(--art-line)" stroke-opacity="0.3" stroke-dasharray="3 6" />
+        <path d={markerCaps(marker.x)} stroke="var(--art-line)" stroke-opacity="0.65" />
+        <g data-attention-selector transform={selectorTransform(attention.selectorY)}>
+          <circle data-attention-pulse r={attention.pulseRadius} stroke="var(--art-highlight)" stroke-opacity={attention.pulseAlpha} />
+          <circle r={SELECTOR_RADIUS} fill="var(--panel-bg)" stroke="var(--art-line)" stroke-opacity="0.7" />
+          <circle r="3.2" fill="var(--art-highlight)" />
+        </g>
+      </>
+    )}
+
+    {field && FIELD_CELLS.map((cell, i) => <circle data-field-cell cx={cell.x} cy={cell.y} r={field[i].radius.toFixed(2)} fill="var(--art-line)" fill-opacity={field[i].alpha.toFixed(3)} />)}
+
+    {orbits && (
+      <>
+        {ORBITS.map(orbit => <circle cx={ORBIT_CENTER.x} cy={ORBIT_CENTER.y} r={orbit.r} stroke="var(--art-line)" stroke-opacity="0.16" />)}
+        <path d={markerLine(ORBIT_CENTER.x)} stroke="var(--art-line)" stroke-opacity="0.3" stroke-dasharray="3 6" />
+        <path d={markerCaps(ORBIT_CENTER.x)} stroke="var(--art-line)" stroke-opacity="0.65" />
+        {/* the line every cell lands on at once, lit only while they are lined up */}
+        <path data-orbit-line d={`M${ORBIT_CENTER.x} ${ORBIT_CENTER.y}V${ORBIT_CENTER.y - ORBITS[ORBITS.length - 1].r}`} stroke="var(--art-highlight)" stroke-width="1.6" stroke-opacity={orbits.lineAlpha} />
+        <circle data-orbit-pulse cx={ORBIT_CENTER.x} cy={ORBIT_CENTER.y} r={orbits.pulseRadius} stroke="var(--art-highlight)" stroke-opacity={orbits.pulseAlpha} />
+        {ORBITS.map((orbit, i) => (
+          <g data-orbit transform={orbitTransform(orbits.angles[i])} stroke-linecap="round">
+            <path d={trailPath(orbit)} stroke="var(--art-line)" stroke-width="1.4" stroke-opacity="0.4" />
+            <path d={trailPath(orbit, 0.45)} stroke="var(--art-highlight)" stroke-width="1.6" stroke-opacity="0.9" />
+            <circle data-orbit-dot cx={ORBIT_CENTER.x + orbit.r} cy={ORBIT_CENTER.y} r={orbits.dotRadius} fill="var(--art-highlight)" />
+          </g>
+        ))}
+        <circle cx={ORBIT_CENTER.x} cy={ORBIT_CENTER.y} r="5" fill="var(--panel-bg)" stroke="var(--art-line)" stroke-width="1.5" />
+        <circle cx={ORBIT_CENTER.x} cy={ORBIT_CENTER.y} r="2" fill="var(--art-highlight)" />
       </>
     )}
   </svg>
@@ -63,3 +135,17 @@ const paths = [
   .band-artwork { min-width: 0; width: 100%; }
   .band-artwork svg { display: block; width: 100%; }
 </style>
+
+<script>
+  import { startBandArtwork } from '../lib/bandArtwork';
+  import { startAttention } from '../lib/bandAttention';
+  import { startField } from '../lib/bandField';
+  import { startOrbits } from '../lib/bandOrbits';
+  import { startRaster } from '../lib/bandRaster';
+
+  const start: Record<string, (root: HTMLElement) => void> = {
+    network: startBandArtwork, signals: startBandArtwork, disruption: startBandArtwork,
+    raster: startRaster, attention: startAttention, field: startField, orbits: startOrbits,
+  };
+  document.querySelectorAll<HTMLElement>('[data-band-artwork]').forEach((root) => start[root.dataset.bandArtwork ?? '']?.(root));
+</script>

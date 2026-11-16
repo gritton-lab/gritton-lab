@@ -1,5 +1,6 @@
 ---
 import BandArtwork from './BandArtwork.astro';
+import type { ArtworkVariant } from '../lib/bandArtwork';
 
 interface Props {
   eyebrow?: string;
@@ -7,9 +8,11 @@ interface Props {
   accent?: string;
   body?: string;
   links: { label: string; href: string; primary?: boolean }[];
+  /** Which artwork to show. Left out, bands that send people to open positions get the network and the rest get the signals. */
+  artwork?: ArtworkVariant;
 }
 
-const { eyebrow = 'Next', title, accent, body, links } = Astro.props;
+const { eyebrow = 'Next', title, accent, body, links, artwork } = Astro.props;
 const highlight = accent && title.endsWith(accent) ? accent : '';
 const peopleFocused = links.some(link => link.href === '/lab-positions');
 ---
@@ -34,7 +37,7 @@ const peopleFocused = links.some(link => link.href === '/lab-positions');
       </div>
     </div>
 
-    <BandArtwork variant={peopleFocused ? 'network' : 'signals'} />
+    <BandArtwork variant={artwork ?? (peopleFocused ? 'network' : 'signals')} />
   </div>
 </section>
 
