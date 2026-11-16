@@ -1,14 +1,8 @@
 ---
-const traces = Array.from({ length: 7 }, (_, index) => {
-  const points = Array.from({ length: 151 }, (_, step) => {
-    const x = step * 3.2;
-    const blend = Math.max(0, Math.min(1, (x - 175) / 175));
-    const separate = 54 + index * 38 + Math.sin(x * 0.055 + index * 1.7) * 12;
-    const together = 168 + Math.sin(x * 0.043) * 43;
-    return `${x.toFixed(1)},${(separate * (1 - blend) + together * blend).toFixed(1)}`;
-  });
-  return points.join(' ');
-});
+import { MARKER_X, ROWS, markerTransform, tracePoints } from '../lib/circuitWaves';
+
+// The still frame; the script below sets the same traces moving.
+const traces = ROWS.map((_, index) => tracePoints(index, 0));
 ---
 
 <section class="circuit-question" aria-labelledby="circuit-question-title">
@@ -18,19 +12,27 @@ const traces = Array.from({ length: 7 }, (_, index) => {
     <p class="circuit-question__question">How do thousands of cells act in unison at exactly the right moment?</p>
     <a class="circuit-question__link" href="/projects">Explore the science <span aria-hidden="true">↗</span></a>
   </div>
-  <div class="circuit-question__figure" aria-hidden="true">
+  <div class="circuit-question__figure" aria-hidden="true" data-circuit-waves>
     <svg viewBox="0 0 480 330" fill="none">
-      {[54, 92, 130, 168, 206, 244, 282].map(y => <path d={`M0 ${y}H480`} stroke="var(--art-line)" stroke-opacity="0.055" />)}
+      {ROWS.map(y => <path d={`M0 ${y}H480`} stroke="var(--art-line)" stroke-opacity="0.055" />)}
       {[80, 160, 240, 320, 400].map(x => <path d={`M${x} 24V310`} stroke="var(--art-line)" stroke-opacity="0.055" />)}
-      {traces.map((points, i) => <polyline points={points} stroke="var(--art-line)" stroke-opacity={i === 3 ? 0.9 : 0.45} stroke-width={i === 3 ? 2 : 1.2} />)}
-      <path d="M351 31V297" stroke="var(--art-line)" stroke-opacity="0.4" stroke-dasharray="3 6" />
-      <circle cx="351" cy="192" r="5" fill="var(--art-highlight)" />
-      <circle cx="351" cy="192" r="13" stroke="var(--art-line)" stroke-opacity="0.4" />
-      <circle cx="351" cy="192" r="23" stroke="var(--art-line)" stroke-opacity="0.15" />
-      <path d="M345 31H357M345 297H357" stroke="var(--art-line)" />
+      {traces.map((points, i) => <polyline data-circuit-trace points={points} stroke="var(--art-line)" stroke-opacity={i === 3 ? 0.9 : 0.45} stroke-width={i === 3 ? 2 : 1.2} />)}
+      <path d={`M${MARKER_X} 31V297`} stroke="var(--art-line)" stroke-opacity="0.4" stroke-dasharray="3 6" />
+      <path d={`M${MARKER_X - 6} 31H${MARKER_X + 6}M${MARKER_X - 6} 297H${MARKER_X + 6}`} stroke="var(--art-line)" />
+      {/* the dot rides the shared wave up and down the marker line */}
+      <g data-circuit-marker transform={markerTransform(0)}>
+        <circle r="5" fill="var(--art-highlight)" />
+        <circle r="13" stroke="var(--art-line)" stroke-opacity="0.4" />
+        <circle r="23" stroke="var(--art-line)" stroke-opacity="0.15" />
+      </g>
     </svg>
   </div>
 </section>
+
+<script>
+  import { startCircuitWaves } from '../lib/circuitWaves';
+  document.querySelectorAll<HTMLElement>('[data-circuit-waves]').forEach(startCircuitWaves);
+</script>
 
 <style>
   .circuit-question {
