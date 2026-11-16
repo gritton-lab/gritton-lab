@@ -35,11 +35,6 @@ const markerCaps = (x: number) => `M${x - 6} 24H${x + 6}M${x - 6} 256H${x + 6}`;
     </svg>
     <canvas tabindex="0" role="img"
       aria-label="A reconstructed mouse cortical neuron whose branches brighten as their simulated membrane voltage rises. Drag or use the arrow keys to rotate; Space pauses."></canvas>
-    <p class="band-artwork__credit">
-      Mouse L5 pyramidal cell ·{' '}
-      <a href="https://celltypes.brain-map.org/experiment/electrophysiology/485574832" target="_blank" rel="noopener noreferrer">Allen Institute</a>{' '}
-      model, illustrative
-    </p>
   </div>
 ) : (
 <div class:list={['band-artwork', `band-artwork--${variant}`]} aria-hidden="true" data-band-artwork={variant}>
@@ -156,9 +151,6 @@ const markerCaps = (x: number) => `M${x - 6} 24H${x + 6}M${x - 6} 256H${x + 6}`;
   .band-artwork--neuron canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; }
   .band-artwork--neuron canvas:active { cursor: grabbing; }
   .band-artwork--neuron canvas:focus-visible { outline: 1px solid var(--panel-line); outline-offset: 2px; }
-  .band-artwork__credit { position: absolute; right: 0; bottom: -1.4rem; margin: 0; color: var(--panel-muted); font-size: 0.62rem; letter-spacing: 0.04em; opacity: 0.55; }
-  .band-artwork__credit a { color: inherit; text-underline-offset: 0.18em; }
-  .band-artwork__credit a:hover { opacity: 1; }
 </style>
 
 <script>
