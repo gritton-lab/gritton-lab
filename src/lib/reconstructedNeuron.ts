@@ -16,11 +16,11 @@ interface Spike { t0: number; big: boolean }
 const DATA_URL = '/data/reconstructed-neuron.json';
 
 /** Local spikes: slow front, short reach, strength falling off quickly with distance. */
-const LOCAL = { speed: 320, width: 38, decay: 70, reach: 130, linger: 0.3 };
+const LOCAL = { speed: 1400, width: 45, decay: 70, reach: 130, linger: 0.14 };
 /** Spikes that climb the whole cell: faster front, full strength out to the tuft. */
-const FULL = { speed: 950, width: 70, linger: 0.45 };
+const FULL = { speed: 3600, width: 110, linger: 0.28 };
 /** Seconds between spikes, and how many local spikes come before each full one. */
-const GAP: [number, number] = [0.6, 1.15];
+const GAP: [number, number] = [0.3, 0.65];
 const LOCAL_RUN: [number, number] = [2, 4];
 
 export async function createReconstructedNeuron(root: HTMLElement) {
@@ -68,9 +68,9 @@ export async function createReconstructedNeuron(root: HTMLElement) {
       const big = untilFull <= 0;
       spikes.push({ t0: nextAt, big });
       untilFull = big ? randInt(LOCAL_RUN) : untilFull - 1;
-      nextAt += between(...GAP) + (big ? 0.5 : 0);
+      nextAt += between(...GAP) + (big ? 0.25 : 0);
     }
-    spikes = spikes.filter((s) => clock - s.t0 < (s.big ? maxReach / FULL.speed + 1.2 : 1.2));
+    spikes = spikes.filter((s) => clock - s.t0 < (s.big ? maxReach / FULL.speed + 0.8 : 0.6));
   };
 
   /** How lit a segment at path distance r is, `age` seconds after a spike. */
