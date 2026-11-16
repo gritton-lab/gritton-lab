@@ -1,32 +1,34 @@
 /**
- * A measured mouse layer-5 pyramidal neuron (Allen Institute specimen 485574832) replaying
- * membrane voltages precomputed in NEURON with the Allen all-active model 497232312.
- * Each branch is coloured by how far its own compartment has depolarised from rest; nothing
- * here is invented or shuffled — the renderer only interpolates between stored samples.
+ * A measured mouse layer-5 pyramidal neuron (Allen Institute specimen 485574832) with
+ * illustrative firing. The morphology is real; the activity is choreographed, not simulated.
  *
- * Data (public/data): reconstructed-neuron.json holds the geometry and trial metadata;
- * reconstructed-neuron.bin holds uint8 voltages, voltage_mV = value / 2 - 100,
- * sample-major then segment, one block per trial.
+ * Most spikes stay local: a short flash around the soma, basal dendrites and axon that fades
+ * within ~100 µm. Every few spikes one carries all the way up the apical trunk and lights the
+ * whole tuft. Each event is a front travelling outward by path distance from the soma.
+ *
+ * Data (public/data/reconstructed-neuron.json): per segment, its 3D path (p, µm), diameter (d),
+ * kind (soma | dend | apic | axon) and path distance from the soma (r, µm).
  */
 type Point = [number, number, number];
-interface NeuronData {
-  sampleMs: number;
-  durationMs: number;
-  segments: number;
-  scenarios: { mode: string; samples: number }[];
-  geometry: { p: Point[]; d: number }[];
-}
+interface Segment { p: Point[]; d: number; k: string; r: number }
+interface Spike { t0: number; big: boolean }
 
-const DATA_URL = '/data/reconstructed-neuron';
-/** A moment just after the first somatic spike of the target trial, for the still frame. */
-const STILL_MS = 177.5;
+const DATA_URL = '/data/reconstructed-neuron.json';
+
+/** Local spikes: slow front, short reach, strength falling off quickly with distance. */
+const LOCAL = { speed: 320, width: 38, decay: 70, reach: 130, linger: 0.3 };
+/** Spikes that climb the whole cell: faster front, full strength out to the tuft. */
+const FULL = { speed: 950, width: 70, linger: 0.45 };
+/** Seconds between spikes, and how many local spikes come before each full one. */
+const GAP: [number, number] = [0.6, 1.15];
+const LOCAL_RUN: [number, number] = [2, 4];
 
 export async function createReconstructedNeuron(root: HTMLElement) {
   const canvas = root.querySelector('canvas')!;
   const ctx = canvas.getContext('2d')!;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
-  // Wait until the figure is close to the viewport before downloading ~160 kB of data.
+  // Wait until the figure is near the viewport before downloading the morphology.
   await new Promise<void>((resolve) => {
     const io = new IntersectionObserver((entries) => {
       if (entries.some((e) => e.isIntersecting)) { io.disconnect(); resolve(); }
@@ -34,51 +36,72 @@ export async function createReconstructedNeuron(root: HTMLElement) {
     io.observe(root);
   });
 
-  let data: NeuronData, bytes: Uint8Array;
+  let geometry: Segment[];
   try {
-    const [meta, bin] = await Promise.all([
-      fetch(`${DATA_URL}.json`).then((r) => { if (!r.ok) throw new Error(r.statusText); return r.json(); }),
-      fetch(`${DATA_URL}.bin`).then((r) => { if (!r.ok) throw new Error(r.statusText); return r.arrayBuffer(); }),
-    ]);
-    data = meta; bytes = new Uint8Array(bin);
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error(res.statusText);
+    geometry = (await res.json()).geometry;
   } catch {
     root.dataset.state = 'error';
     return;
   }
 
-  const N = data.segments;
-  const offsets = data.scenarios.map((_, i) => data.scenarios.slice(0, i).reduce((sum, s) => sum + s.samples * N, 0));
-
-  const points = data.geometry.flatMap((g) => g.p);
+  const N = geometry.length;
+  const points = geometry.flatMap((g) => g.p);
   const extent = (k: number) => [Math.min(...points.map((p) => p[k])), Math.max(...points.map((p) => p[k]))];
   const center = [0, 1, 2].map((k) => { const [lo, hi] = extent(k); return (lo + hi) / 2; });
   const [yLo, yHi] = extent(1);
   const span = yHi - yLo;
   const radius = Math.max(...points.map((p) => Math.hypot(p[0] - center[0], p[2] - center[2])));
+  const maxReach = Math.max(...geometry.map((g) => g.r));
 
   const between = (a: number, b: number) => a + Math.random() * (b - a);
-  let selected = 0, time = STILL_MS;
-  let playback = between(30, 48), nextPlayback = playback;
-  let drift = between(-0.025, 0.025), nextDrift = drift;
+  const randInt = ([a, b]: [number, number]) => a + Math.floor(Math.random() * (b - a + 1));
+
+  // ---------- firing ----------
+  let clock = 0;
+  let spikes: Spike[] = [];
+  let nextAt = 0.3, untilFull = randInt(LOCAL_RUN);
+
+  const schedule = () => {
+    while (clock >= nextAt) {
+      const big = untilFull <= 0;
+      spikes.push({ t0: nextAt, big });
+      untilFull = big ? randInt(LOCAL_RUN) : untilFull - 1;
+      nextAt += between(...GAP) + (big ? 0.5 : 0);
+    }
+    spikes = spikes.filter((s) => clock - s.t0 < (s.big ? maxReach / FULL.speed + 1.2 : 1.2));
+  };
+
+  /** How lit a segment at path distance r is, `age` seconds after a spike. */
+  const response = (r: number, kind: string, age: number, big: boolean) => {
+    if (age < 0) return 0;
+    if (big) {
+      const front = FULL.speed * age, passed = age - r / FULL.speed;
+      const wave = Math.exp(-(((r - front) / FULL.width) ** 2));
+      const glow = passed > 0 ? 0.4 * Math.exp(-passed / FULL.linger) : 0;
+      return (1 - 0.18 * (r / maxReach)) * Math.max(wave, glow);
+    }
+    if (kind === 'apic' && r > LOCAL.reach) return 0;
+    const front = LOCAL.speed * age, passed = age - r / LOCAL.speed;
+    const wave = Math.exp(-(((r - front) / LOCAL.width) ** 2));
+    const glow = passed > 0 ? 0.35 * Math.exp(-passed / LOCAL.linger) : 0;
+    return 0.85 * Math.exp(-r / LOCAL.decay) * Math.max(wave, glow);
+  };
+
+  const level = (i: number) => {
+    const g = geometry[i];
+    let lit = 0;
+    for (const s of spikes) lit = Math.max(lit, response(g.r, g.k, clock - s.t0, s.big));
+    return Math.min(1, lit);
+  };
+
+  // ---------- view ----------
   let yaw = between(-0.65, 0.65), pitch = between(-0.08, 0.08), zoom = 1, wobble = between(0, 100);
+  let drift = between(-0.03, 0.03);
   let width = 1, height = 1, frame = 0, last = 0, manualUntil = 0;
   let visible = true, playing = !reduced.matches;
   let drag: [number, number] | null = null;
-
-  const nextTrial = () => {
-    // Always replay a complete computed trial; never mix voltages between trials.
-    selected = Math.floor(Math.random() * data.scenarios.length);
-    time = between(0, 55);
-    nextPlayback = between(30, 48);
-    nextDrift = between(-0.025, 0.025);
-  };
-  if (playing) { selected = Math.floor(Math.random() * data.scenarios.length); time = between(65, 110); }
-
-  const voltage = (i: number, t: number) => {
-    const s = data.scenarios[selected], base = offsets[selected];
-    const a = Math.min(s.samples - 1, t / data.sampleMs), j = Math.floor(a), k = Math.min(j + 1, s.samples - 1), f = a - j;
-    return (bytes[base + j * N + i] * (1 - f) + bytes[base + k * N + i] * f) / 2 - 100;
-  };
 
   const project = (p: Point): [number, number, number] => {
     const x = p[0] - center[0], y = p[1] - center[1], z = p[2] - center[2];
@@ -94,16 +117,16 @@ export async function createReconstructedNeuron(root: HTMLElement) {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     for (let i = 0; i < N; i++) {
-      const g = data.geometry[i], first = project(g.p[0]);
-      const level = Math.max(0, Math.min(1, (voltage(i, time) - voltage(i, 0)) / 65));
-      const color = `${Math.round(132 + level * 120)},${Math.round(175 + level * 75)},${Math.round(207 + level * 45)}`;
-      ctx.strokeStyle = `rgba(${color},${0.62 + level * 0.38})`;
+      const g = geometry[i], first = project(g.p[0]);
+      const lit = level(i);
+      const color = `${Math.round(132 + lit * 120)},${Math.round(175 + lit * 75)},${Math.round(207 + lit * 45)}`;
+      ctx.strokeStyle = `rgba(${color},${0.62 + lit * 0.38})`;
       ctx.lineWidth = Math.max(1.1, Math.min(12, g.d * first[2] * 1.25));
       ctx.beginPath();
       ctx.moveTo(first[0], first[1]);
       for (let v = 1; v < g.p.length; v++) { const q = project(g.p[v]); ctx.lineTo(q[0], q[1]); }
       ctx.stroke();
-      if (level > 0.12) { ctx.strokeStyle = `rgba(${color},${level * 0.18})`; ctx.lineWidth += 5; ctx.stroke(); }
+      if (lit > 0.12) { ctx.strokeStyle = `rgba(${color},${lit * 0.22})`; ctx.lineWidth += 5; ctx.stroke(); }
     }
   };
 
@@ -114,15 +137,20 @@ export async function createReconstructedNeuron(root: HTMLElement) {
     last = now;
     const running = playing && visible && !document.hidden;
     if (running) {
-      playback += (nextPlayback - playback) * (1 - Math.exp(-delta * 0.6));
-      drift += (nextDrift - drift) * (1 - Math.exp(-delta * 0.5));
-      time += delta * playback;
-      if (time >= data.durationMs) nextTrial();
+      clock += delta;
+      schedule();
       if (!drag && now > manualUntil) { yaw += delta * drift; wobble += delta; }
     }
     draw();
     if (running) request(); else last = 0;
   }
+
+  /** Under reduced motion: a single still frame of a full spike halfway up the cell. */
+  const showStill = () => {
+    spikes = [{ t0: 0, big: true }];
+    clock = (maxReach * 0.5) / FULL.speed;
+  };
+  if (!playing) showStill();
 
   const resize = () => {
     const box = canvas.getBoundingClientRect();
@@ -133,14 +161,6 @@ export async function createReconstructedNeuron(root: HTMLElement) {
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     request();
   };
-
-  const syncButton = () => {
-    const button = root.querySelector<HTMLButtonElement>('[data-neuron-toggle]');
-    if (!button) return;
-    button.setAttribute('aria-pressed', String(!playing));
-    button.textContent = playing ? 'Pause' : 'Play';
-  };
-  const toggle = () => { playing = !playing; last = 0; syncButton(); request(); };
 
   canvas.addEventListener('pointerdown', (e) => {
     manualUntil = performance.now() + 6000;
@@ -162,7 +182,7 @@ export async function createReconstructedNeuron(root: HTMLElement) {
     if (!keys.includes(e.key)) return;
     e.preventDefault();
     manualUntil = performance.now() + 6000;
-    if (e.key === ' ') return toggle();
+    if (e.key === ' ') { playing = !playing; last = 0; }
     if (e.key === 'ArrowLeft') yaw -= 0.15;
     if (e.key === 'ArrowRight') yaw += 0.15;
     if (e.key === 'ArrowUp') pitch = Math.max(-0.6, pitch - 0.1);
@@ -172,14 +192,17 @@ export async function createReconstructedNeuron(root: HTMLElement) {
     if (e.key === 'r' || e.key === 'R') { yaw = -0.15; pitch = 0; zoom = 1; }
     request();
   });
-  root.querySelector('[data-neuron-toggle]')?.addEventListener('click', toggle);
 
   new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; last = 0; request(); }).observe(root);
   document.addEventListener('visibilitychange', () => { last = 0; request(); });
-  reduced.addEventListener('change', () => { playing = !reduced.matches; last = 0; syncButton(); request(); });
+  reduced.addEventListener('change', () => {
+    playing = !reduced.matches;
+    if (!playing) showStill();
+    last = 0;
+    request();
+  });
   new ResizeObserver(resize).observe(canvas);
 
   root.dataset.state = 'ready';
-  syncButton();
   resize();
 }
