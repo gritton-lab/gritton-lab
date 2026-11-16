@@ -38,7 +38,7 @@ export function createAssemblyScene(root: HTMLElement) {
 
   // ---------- state ----------
   type Pt = { x: number; y: number; nx: number; ny: number; s: number; l: number };
-  type Edge = { a: number; b: number; cx: number; cy: number };
+  type Edge = { a: number; b: number; main: Path2D; twigs: Path2D };
   type Assembly = {
     id: number; kind: string; members: number[]; edges: Edge[];
     omega: number; phase: number; t: number; rise: number; hold: number; fall: number; peak: number; k: number; wave: number;
@@ -55,6 +55,7 @@ export function createAssemblyScene(root: HTMLElement) {
   let staticLayer: HTMLCanvasElement | null = null;
   let sprites: { soma: HTMLCanvasElement; hot: HTMLCanvasElement; haze: HTMLCanvasElement } | null = null;
   let visible = false, frame: number | undefined, lastTime = 0;
+  const SPEED = 4;   // everything (firing, calcium, assemblies) runs at this multiple of real time
   const animate = () => !reducedMotion.matches;
 
   // ---------- geometry ----------
@@ -165,18 +166,33 @@ export function createAssemblyScene(root: HTMLElement) {
 
   function makeDendrite(p: { x: number; y: number; r: number; ang: number; band: boolean }, rMean: number) {
     const path = new Path2D();
-    const branch = (x: number, y: number, ang: number, len: number): [number, number, number] => {
-      const bend = gauss() * 0.35;
-      const mx = x + Math.cos(ang + bend * 0.5) * len * 0.5, my = y + Math.sin(ang + bend * 0.5) * len * 0.5;
-      const ex = x + Math.cos(ang + bend) * len, ey = y + Math.sin(ang + bend) * len;
-      path.moveTo(x, y); path.quadraticCurveTo(mx, my, ex, ey);
-      return [ex, ey, ang + bend];
+    // Tortuous neurite: the heading kinks at every short stride and is only loosely tugged back
+    // toward its course, so each process crinkles and wanders instead of running straight.
+    const branch = (x: number, y: number, ang: number, len: number) => {
+      const pts: number[][] = [[x, y, ang]];
+      let a = ang + gauss() * 0.2, done = 0;
+      path.moveTo(x, y);
+      while (done < len) {
+        const stride = Math.min(len - done + 0.01, rMean * U(0.35, 1.0));
+        a += gauss() * 0.42 + wrapPi(ang - a) * 0.3;
+        x += Math.cos(a) * stride; y += Math.sin(a) * stride;
+        path.lineTo(x, y);
+        pts.push([x, y, a]);
+        done += stride;
+      }
+      return pts;
     };
     if (p.band) {
       const len = rMean * U(5, 11);
-      const [ex, ey, ea] = branch(p.x + Math.cos(p.ang) * p.r * 0.9, p.y + Math.sin(p.ang) * p.r * 0.9, p.ang, len);
+      const trunk = branch(p.x + Math.cos(p.ang) * p.r * 0.9, p.y + Math.sin(p.ang) * p.r * 0.9, p.ang, len);
+      const [ex, ey, ea] = trunk[trunk.length - 1];
       if (rand() < 0.7) branch(ex, ey, ea + U(0.3, 0.7), len * U(0.3, 0.55));
       if (rand() < 0.7) branch(ex, ey, ea - U(0.3, 0.7), len * U(0.3, 0.55));
+      // oblique branches leaving the apical trunk partway up
+      for (let k = UI(0, 2); k > 0; k--) {
+        const o = trunk[UI(1, Math.max(1, trunk.length - 2))];
+        branch(o[0], o[1], o[2] + (rand() < 0.5 ? -1 : 1) * U(0.6, 1.2), len * U(0.18, 0.4));
+      }
       for (let k = UI(1, 3); k > 0; k--) {
         const a = p.ang + Math.PI + U(-1.1, 1.1);
         branch(p.x + Math.cos(a) * p.r, p.y + Math.sin(a) * p.r, a, rMean * U(1.6, 3.2));
@@ -240,14 +256,82 @@ export function createAssemblyScene(root: HTMLElement) {
   };
   const pickKind = () => { const r = rand(); return r < 0.34 ? 'small' : r < 0.58 ? 'distributed' : r < 0.84 ? 'long' : 'large'; };
 
+  // Lightning-bolt links. Nothing here is a chord with noise on it: the route first doglegs away
+  // from the direct line, then a leader zig-zags along it in sharp, uneven strides, throwing off
+  // forked side branches as it goes — the way a stepped leader (or a real axon) finds its target.
+
+  // One leader run: step toward the target, kinking hard to one side then the other.
+  function jagged(x0: number, y0: number, x1: number, y1: number, step: number, kink: number) {
+    const pts: number[][] = [[x0, y0]];
+    let x = x0, y = y0, side = rand() < 0.5 ? -1 : 1;
+    for (let guard = 0; guard < 300; guard++) {
+      const dx = x1 - x, dy = y1 - y, left = Math.hypot(dx, dy);
+      if (left < step * 1.25) break;
+      if (rand() < 0.7) side = -side;                                     // mostly alternate, sometimes run on
+      const dev = side * Math.min(1.2, kink * (0.3 + Math.abs(gauss()))); // never a gentle bend
+      const len = Math.min(left * 0.75, step * U(0.4, 1.8));              // short stabs and long reaches
+      const a = Math.atan2(dy, dx) + dev;
+      x += Math.cos(a) * len; y += Math.sin(a) * len;
+      pts.push([x, y]);
+    }
+    pts.push([x1, y1]);
+    return pts;
+  }
+  function boltPoints(x0: number, y0: number, x1: number, y1: number, step: number, kink: number, wander: number) {
+    // coarse route: one or two rounds of off-centre doglegs, so the whole bolt bows off the direct line
+    let way: number[][] = [[x0, y0], [x1, y1]];
+    const L = Math.hypot(x1 - x0, y1 - y0) || 1;
+    const passes = L > step * 14 ? 2 : 1;
+    for (let pass = 0; pass < passes; pass++) {
+      const next: number[][] = [way[0]];
+      for (let i = 1; i < way.length; i++) {
+        const ax = way[i - 1][0], ay = way[i - 1][1], bx = way[i][0], by = way[i][1];
+        const sl = Math.hypot(bx - ax, by - ay) || 1;
+        const off = (rand() < 0.5 ? -1 : 1) * sl * wander * U(0.45, 1) * (pass ? 0.7 : 1);
+        const along = U(0.3, 0.7);
+        next.push([ax + (bx - ax) * along - ((by - ay) / sl) * off, ay + (by - ay) * along + ((bx - ax) / sl) * off]);
+        next.push(way[i]);
+      }
+      way = next;
+    }
+    // fine structure: a jagged leader between each pair of waypoints
+    const pts: number[][] = [way[0]];
+    for (let i = 1; i < way.length; i++) {
+      const seg = jagged(way[i - 1][0], way[i - 1][1], way[i][0], way[i][1], step, kink);
+      for (let k = 1; k < seg.length; k++) pts.push(seg[k]);
+    }
+    return pts;
+  }
+  function makeBolt(x0: number, y0: number, x1: number, y1: number, span: number) {
+    const main = new Path2D(), twigs = new Path2D();
+    const L = Math.hypot(x1 - x0, y1 - y0);
+    const trace = (p: Path2D, pts: number[][]) => { p.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) p.lineTo(pts[i][0], pts[i][1]); };
+    const step = clamp(L / 8, 3.2, Math.max(3.2, span * 0.011));
+    const trunk = boltPoints(x0, y0, x1, y1, step, 0.62, 0.3);
+    trace(main, trunk);
+    // forks: every link gets at least one, longer links several; each leaves at an acute angle
+    // in the direction of travel and may fork again
+    const count = clamp(Math.round(L / (span * 0.03)) + UI(0, 1), 1, 8);
+    const sprout = (pts: number[][], len: number, depth: number) => {
+      if (pts.length < 3) return;
+      const idx = UI(1, pts.length - 2);
+      const px = pts[idx][0], py = pts[idx][1], q = pts[idx + 1];
+      const dir = Math.atan2(q[1] - py, q[0] - px) + (rand() < 0.5 ? -1 : 1) * U(0.4, 1.05);
+      const tw = boltPoints(px, py, px + Math.cos(dir) * len, py + Math.sin(dir) * len, Math.max(2.6, step * 0.7), 0.7, 0.22);
+      trace(twigs, tw);
+      if (depth > 0 && rand() < 0.6) sprout(tw, len * U(0.4, 0.65), depth - 1);
+    };
+    for (let k = 0; k < count; k++) sprout(trunk, clamp(L * U(0.14, 0.4), 7, Math.max(7, span * 0.06)), 2);
+    return { main, twigs };
+  }
+
   function buildEdges(m: number[], longRange: boolean) {
     const edges: Edge[] = [], n = m.length, seen = new Set<number>();
     const maxLen2 = (Math.min(rw, rh) * 0.13) ** 2;
     const add = (a: number, b: number) => {
       const key = a < b ? a * 100000 + b : b * 100000 + a;
       if (a === b || seen.has(key)) return; seen.add(key);
-      const dx = X[b] - X[a], dy = Y[b] - Y[a], bend = U(-0.18, 0.18);
-      edges.push({ a, b, cx: (X[a] + X[b]) / 2 - dy * bend, cy: (Y[a] + Y[b]) / 2 + dx * bend });
+      edges.push({ a, b, ...makeBolt(X[a], Y[a], X[b], Y[b], Math.min(rw, rh)) });
     };
     const nn = n > 200 ? 1 : 2;
     for (let p = 0; p < n; p++) {
@@ -406,17 +490,27 @@ export function createAssemblyScene(root: HTMLElement) {
       }
     }
     // synchrony links: light up between members firing together
+    const glowStroke = rgba(glowC, 1), hotStroke = rgba(hotC, 1);
+    c.miterLimit = 4;
     for (const a of assemblies) {
       if (a.k < 0.15) continue;
       const kk = Math.pow(a.k, 1.5);
-      c.lineWidth = 0.9 + 0.6 * a.k;
+      const lw = 0.8 + 0.6 * a.k;
       for (const e of a.edges) {
         const together = Math.min(F[e.a], F[e.b]);
         if (together < 0.12) continue;
-        c.globalAlpha = kk * (together - 0.12) * 0.9;
-        c.beginPath(); c.moveTo(X[e.a], Y[e.a]); c.quadraticCurveTo(e.cx, e.cy, X[e.b], Y[e.b]); c.stroke();
+        const al = kk * (together - 0.12) * 0.9;
+        c.strokeStyle = glowStroke;
+        c.lineJoin = 'round';
+        c.globalAlpha = al * 0.22; c.lineWidth = lw * 3.2; c.stroke(e.main);   // soft glow
+        c.lineJoin = 'miter';                                                  // keep every kink sharp
+        c.globalAlpha = al; c.lineWidth = lw; c.stroke(e.main);
+        c.globalAlpha = al * 0.85; c.lineWidth = lw * 0.7; c.stroke(e.twigs);
+        c.strokeStyle = hotStroke;                                             // white-hot core
+        c.globalAlpha = Math.min(1, al * 0.9); c.lineWidth = lw * 0.5; c.stroke(e.main);
       }
     }
+    c.lineJoin = 'round';
     c.globalAlpha = 1;
     c.globalCompositeOperation = 'source-over';
   }
@@ -429,7 +523,7 @@ export function createAssemblyScene(root: HTMLElement) {
     const dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0;
     lastTime = now;
     if (animate()) {
-      const steps = Math.max(1, Math.ceil(dt * 60)), h = dt / steps;
+      const sim = dt * SPEED, steps = Math.max(1, Math.ceil(sim * 60)), h = sim / steps;
       for (let s = 0; s < steps; s++) { updateAssemblies(h); stepNeurons(h); }
     }
     draw();
