@@ -14,8 +14,8 @@ import { TAU, animateWhileVisible, ease, frac, ringAt as ring } from './motion';
 
 export type BandVariant = 'network' | 'signals' | 'disruption';
 export type TraceVariant = Exclude<BandVariant, 'network'>;
-/** Every artwork a band can show; the last four live in their own modules (bandRaster, bandAttention, bandField, bandOrbits). */
-export type ArtworkVariant = BandVariant | 'raster' | 'attention' | 'field' | 'orbits';
+/** Every artwork a band can show; the rest live in their own modules (bandRaster, bandAttention, bandField, bandOrbits, reconstructedNeuron). */
+export type ArtworkVariant = BandVariant | 'raster' | 'attention' | 'field' | 'orbits' | 'neuron';
 
 // ---------- signals and disruption ----------
 /** Resting height of each trace. */

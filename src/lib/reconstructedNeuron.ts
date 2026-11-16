@@ -97,8 +97,8 @@ export async function createReconstructedNeuron(root: HTMLElement) {
       const g = data.geometry[i], first = project(g.p[0]);
       const level = Math.max(0, Math.min(1, (voltage(i, time) - voltage(i, 0)) / 65));
       const color = `${Math.round(132 + level * 120)},${Math.round(175 + level * 75)},${Math.round(207 + level * 45)}`;
-      ctx.strokeStyle = `rgba(${color},${0.48 + level * 0.52})`;
-      ctx.lineWidth = Math.max(0.8, Math.min(12, g.d * first[2]));
+      ctx.strokeStyle = `rgba(${color},${0.62 + level * 0.38})`;
+      ctx.lineWidth = Math.max(1.1, Math.min(12, g.d * first[2] * 1.25));
       ctx.beginPath();
       ctx.moveTo(first[0], first[1]);
       for (let v = 1; v < g.p.length; v++) { const q = project(g.p[v]); ctx.lineTo(q[0], q[1]); }
